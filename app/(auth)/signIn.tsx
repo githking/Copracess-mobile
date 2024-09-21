@@ -8,7 +8,8 @@ import {
 } from "react-native";
 import { useState } from "react";
 import CheckBox from "react-native-check-box";
-import { FontAwesome } from "@expo/vector-icons"; // Import icons from FontAwesome
+import { FontAwesome } from "@expo/vector-icons";
+import { Link } from "expo-router";
 
 import { images } from "../../constants";
 import FormField from "../../components/FormField";
@@ -94,9 +95,9 @@ const signIn = () => {
           </View>
           <View className="flex-row justify-center items-center mt-5">
             <Text>Don't have an account?</Text>
-            <TouchableOpacity>
-              <Text className="text-primary ml-2">Sign Up</Text>
-            </TouchableOpacity>
+            <Link className="text-primary ml-2" href="/signUp">
+              Sign Up
+            </Link>
           </View>
         </View>
       </ScrollView>
