@@ -8,6 +8,7 @@ import { images } from "../../constants";
 import FormField from "../../components/FormField";
 import PhoneInput from "react-native-phone-number-input";
 import CheckBox from "react-native-check-box";
+import { FontAwesome } from "@expo/vector-icons";
 
 const signUp = () => {
   const [form, setForm] = useState({
@@ -140,7 +141,7 @@ const signUp = () => {
                 <View className="items-center mb-7 mt-0">
                   <FormField
                     title="Business Name"
-                    value={form.username}
+                    value={form.businessname}
                     handleChangeText={(e) =>
                       setForm({ ...form, businessname: e })
                     }
@@ -150,7 +151,7 @@ const signUp = () => {
                   />
                   <FormField
                     title="Position"
-                    value={form.lastname}
+                    value={form.position}
                     handleChangeText={(e) => setForm({ ...form, position: e })}
                     otherStyles="mb-2"
                     keyboardType="default"
@@ -158,7 +159,7 @@ const signUp = () => {
                   />
                   <FormField
                     title="Address"
-                    value={form.lastname}
+                    value={form.address}
                     handleChangeText={(e) => setForm({ ...form, address: e })}
                     keyboardType="default"
                     placeholder="Address"
@@ -166,16 +167,18 @@ const signUp = () => {
                   <View className="flex-row justify-between mt-2 w-full mb-5">
                     <View className="flex-1 mr-2">
                       <Text className="mb-1 font-bold">PCA Permit</Text>
-                      <TouchableOpacity className="bg-[#59A60E] p-4 rounded-lg items-center">
-                        <Text className="text-white font-bold">
+                      <TouchableOpacity className="border border-gray-100 bg-white p-4 rounded-lg items-center">
+                        <FontAwesome name="upload" size={15} color="#59A60E" />
+                        <Text className="text-gray-100 font-psemibold">
                           Upload File
                         </Text>
                       </TouchableOpacity>
                     </View>
                     <View className="flex-1 ml-2">
                       <Text className="mb-1 font-bold">Mayor's Permit</Text>
-                      <TouchableOpacity className="bg-[#59A60E] p-4 rounded-lg items-center">
-                        <Text className="text-white font-bold">
+                      <TouchableOpacity className="border border-gray-100 bg-white p-4 rounded-lg items-center">
+                        <FontAwesome name="upload" size={15} color="#59A60E" />
+                        <Text className="text-gray-100 font-psemibold">
                           Upload File
                         </Text>
                       </TouchableOpacity>

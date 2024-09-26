@@ -42,12 +42,7 @@ const signIn = () => {
             />
           </View>
           <View className="flex-row items-center mt-5">
-            <Text className="text-xl text-bold font-psemibold">
-              Sign in as Copra Buyer
-            </Text>
-            <TouchableOpacity className="ml-6">
-              <Text className="text-primary ml-4">Change User</Text>
-            </TouchableOpacity>
+            <Text className="text-xl text-bold font-pbold">Log in</Text>
           </View>
           <FormField
             title="Email Address"
@@ -84,7 +79,7 @@ const signIn = () => {
             containerStyles="mt-7"
             isLoading={isSubmitting}
           />
-          <Text className="text-center mt-5">or log in with</Text>
+          <Text className="text-center mt-5">or Log in with</Text>
           <View className="flex-row justify-between mt-5">
             <TouchableOpacity className="border-2 border-primary bg-white flex-1 items-center mr-2 p-2 bg-blue-600 rounded">
               <FontAwesome name="facebook" size={24} color="black" />
