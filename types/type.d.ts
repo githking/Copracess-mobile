@@ -15,10 +15,36 @@ export declare interface Transaction {
   payment_method: string;
   status: string;
 }
-export declare interface GoogleInputProps {
-  icon: React.ReactNode;
-  containerStyles?: string;
-  initialLocation?: string;
+
+export interface SearchInputProps {
+  initialQuery?: string;
+  icon: ImageSourcePropType;
   handlePress: () => void;
-  textInputBackgroundColor?: string;
+}
+
+export interface addFABProps {
+  onPress: () => void;
+}
+
+export interface AddTransactionModalProps {
+  visible: boolean;
+  onClose: () => void;
+}
+
+export interface FilterModalProps {
+  visible: boolean;
+  onApplyFilters: (filters: {
+    selectedPeriod: string;
+    startDate: Date;
+    endDate: Date;
+    selectedStatus: string[];
+  }) => void;
+  onClose: () => void;
+}
+
+export interface Filters {
+  selectedPeriod: string;
+  startDate: Date;
+  endDate: Date;
+  selectedStatus: string[];
 }

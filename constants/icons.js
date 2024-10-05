@@ -15,6 +15,7 @@ import window from "../assets/icons/window.png";
 import records from "../assets/icons/records.png";
 import booking from "../assets/icons/booking.png";
 import millmap from "../assets/icons/millmap.png";
+import filter from "../assets/icons/filter.png";
 
 export default {
   play,
@@ -34,4 +35,5 @@ export default {
   records,
   booking,
   millmap,
+  filter,
 };

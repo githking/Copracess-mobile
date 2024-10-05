@@ -7,13 +7,15 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React from "react";
+import React, { useState } from "react";
 import { images } from "../../constants";
 import { icons } from "../../constants";
-import FAB from "react-native-fab";
-
 import TransactionCard from "../../components/transactionCard";
-import GoogleTextInput from "../../components/GoogleTextInput";
+import AddFab from "../../components/AddFab";
+import AddTransactionModal from "./../../components/AddTransactionModal";
+import SearchInput from "./../../components/SearchInput";
+import FilterModal from "./../../components/FilterModal";
+import type { Filters } from "../../types/type";
 
 const transactions = [
   {
@@ -50,7 +52,30 @@ const transactions = [
 
 const transaction = () => {
   const loading = false;
-  const handleDestinationPress = () => {};
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+
+  const handleFABPress = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleOpenFilterModal = () => {
+    setIsFilterModalVisible(true);
+  };
+
+  const handleCloseFilterModal = () => {
+    setIsFilterModalVisible(false);
+  };
+
+  const handleApplyFilters = (filters: Filters) => {
+    console.log("Filters applied:", filters);
+    handleCloseFilterModal();
+  };
+
   return (
     <SafeAreaView className="bg-off-100">
       <FlatList
@@ -83,11 +108,21 @@ const transaction = () => {
         )}
         ListHeaderComponent={() => (
           <>
-            <GoogleTextInput
-              icon={icons.search}
-              containerStyles="bg-white shadow-md shadow-gray-100"
-              handlePress={handleDestinationPress}
-            />
+            <View className="flex flex-row items-center space-x-2 w-full ">
+              <View className="flex-1 flex-row items-center ">
+                <SearchInput icon={icons.search} handlePress={() => {}} />
+              </View>
+              <TouchableOpacity
+                className="p-2 border border-primary bg-white rounded-md"
+                onPress={handleOpenFilterModal}
+              >
+                <Image
+                  source={icons.filter}
+                  className="w-10 h-10"
+                  style={{ tintColor: "#59A60E" }}
+                />
+              </TouchableOpacity>
+            </View>
             <View className="flex flex-row items-start justify-between my-5">
               <Text className="flex-1 text-primary text-3xl font-pbold ">
                 Transaction
@@ -100,6 +135,16 @@ const transaction = () => {
             </View>
           </>
         )}
+      />
+      <AddFab onPress={handleFABPress} />
+      <AddTransactionModal
+        visible={isModalVisible}
+        onClose={handleCloseModal}
+      />
+      <FilterModal
+        visible={isFilterModalVisible}
+        onClose={handleCloseFilterModal}
+        onApplyFilters={handleApplyFilters}
       />
     </SafeAreaView>
   );
