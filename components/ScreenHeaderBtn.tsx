@@ -1,17 +1,12 @@
 import { Image, TouchableOpacity, ImageSourcePropType } from "react-native";
 
-interface ScreenHeaderBtnProps {
-  iconUrl: ImageSourcePropType;
-  handlePress: () => void;
-  width?: number;
-  height?: number;
-}
+import { ScreenHeaderBtnProps } from "../types/type";
 
 const ScreenHeaderBtn = ({
   iconUrl,
   handlePress,
-  width = 24,
-  height = 24,
+  width,
+  height,
 }: ScreenHeaderBtnProps) => {
   return (
     <TouchableOpacity

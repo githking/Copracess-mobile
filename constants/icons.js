@@ -16,6 +16,9 @@ import records from "../assets/icons/records.png";
 import booking from "../assets/icons/booking.png";
 import millmap from "../assets/icons/millmap.png";
 import filter from "../assets/icons/filter.png";
+import edit from "../assets/icons/edit.png";
+import notification from "../assets/icons/notification.png";
+import user from "../assets/icons/user.png";
 
 export default {
   play,
@@ -36,4 +39,7 @@ export default {
   booking,
   millmap,
   filter,
+  edit,
+  notification,
+  user,
 };

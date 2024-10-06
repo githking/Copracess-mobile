@@ -5,6 +5,19 @@ interface TabIconProps {
   focused: boolean;
 }
 
+export interface ScreenHeaderBtnProps {
+  iconUrl: ImageSourcePropType;
+  handlePress: () => void;
+  width?: number;
+  height?: number;
+}
+
+export interface CustomHeaderProps {
+  notificationCount: number;
+  onNotificationPress: () => void;
+  onProfilePress: () => void;
+}
+
 export declare interface Transaction {
   transaction_id: string;
   transaction_date_time: string;
@@ -30,6 +43,11 @@ export interface AddTransactionModalProps {
   visible: boolean;
   onClose: () => void;
 }
+interface TransactionCardProps {
+  transaction: Transaction;
+  isEditMode: boolean;
+  onPress: () => void;
+}
 
 export interface FilterModalProps {
   visible: boolean;
@@ -47,4 +65,11 @@ export interface Filters {
   startDate: Date;
   endDate: Date;
   selectedStatus: string[];
+}
+
+export interface UpdateTransactionModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onUpdate: (updatedTransaction: Transaction) => void;
+  transaction: Transaction | null;
 }

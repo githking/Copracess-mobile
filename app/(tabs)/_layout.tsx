@@ -1,10 +1,21 @@
 import React from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Tabs, Stack } from "expo-router";
 import { icons, images } from "../../constants";
+import CustomHeader from "../../components/CustomHeader";
 import ScreenHeaderBtn from "../../components/ScreenHeaderBtn";
-
 import { TabIconProps } from "../../types/type";
+
+const notificationCount = 3;
+const handleNotificationPress = () => {
+  // Handle notification press
+  console.log("Notification pressed");
+};
+
+const handleProfilePress = () => {
+  // Handle profile press
+  console.log("Profile pressed");
+};
 
 const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
   <View className="items-center justify-center gap-2">
@@ -28,15 +39,16 @@ const tabsLayout = () => (
     <Stack.Screen
       options={{
         headerShadowVisible: false,
-        headerLeft: () => (
-          <ScreenHeaderBtn
-            iconUrl={images.logo}
-            handlePress={() => {}}
-            width={150}
-            height={90}
+        headerStyle: {
+          backgroundColor: "white",
+        },
+        header: () => (
+          <CustomHeader
+            notificationCount={notificationCount}
+            onNotificationPress={handleNotificationPress}
+            onProfilePress={handleProfilePress}
           />
         ),
-        title: "",
       }}
     />
     <Tabs

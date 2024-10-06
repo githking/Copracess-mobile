@@ -13,9 +13,10 @@ import { icons } from "../../constants";
 import TransactionCard from "../../components/transactionCard";
 import AddFab from "../../components/AddFab";
 import AddTransactionModal from "./../../components/AddTransactionModal";
+import UpdateTransactionModal from "../../components/UpdateTransactionModal";
 import SearchInput from "./../../components/SearchInput";
 import FilterModal from "./../../components/FilterModal";
-import type { Filters } from "../../types/type";
+import type { Filters, Transaction } from "../../types/type";
 
 const transactions = [
   {
@@ -51,9 +52,13 @@ const transactions = [
 ];
 
 const transaction = () => {
-  const loading = false;
+  const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
 
   const handleFABPress = () => {
     setIsModalVisible(true);
@@ -76,16 +81,47 @@ const transaction = () => {
     handleCloseFilterModal();
   };
 
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleTransactionPress = (transaction: Transaction) => {
+    if (isEditMode) {
+      setSelectedTransaction(transaction);
+      setIsUpdateModalVisible(true);
+    }
+  };
+
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalVisible(false);
+    setSelectedTransaction(null);
+  };
+
+  const handleUpdateTransaction = (updatedTransaction: Transaction) => {
+    console.log("Updating transaction:", updatedTransaction);
+
+    const updatedTransactions = transactions.map((t) =>
+      t.transaction_id === updatedTransaction.transaction_id
+        ? updatedTransaction
+        : t
+    );
+
+    handleCloseUpdateModal();
+    setIsEditMode(false);
+  };
+
   return (
-    <SafeAreaView className="bg-off-100">
+    <SafeAreaView className="flex-1 bg-off-100">
       <FlatList
         data={transactions}
         className="p-4"
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.transaction_id}
         renderItem={({ item }) => (
-          <View>
-            <TransactionCard transaction={item} />
-          </View>
+          <TransactionCard
+            transaction={item}
+            isEditMode={isEditMode}
+            onPress={() => handleTransactionPress(item)}
+          />
         )}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -95,7 +131,7 @@ const transaction = () => {
               <>
                 <Image
                   source={images.empty}
-                  className="w-40 h-40 "
+                  className="w-40 h-40"
                   alt="No transaction found"
                   resizeMode="contain"
                 />
@@ -108,8 +144,8 @@ const transaction = () => {
         )}
         ListHeaderComponent={() => (
           <>
-            <View className="flex flex-row items-center space-x-2 w-full ">
-              <View className="flex-1 flex-row items-center ">
+            <View className="flex flex-row items-center space-x-2 w-full">
+              <View className="flex-1 flex-row items-center">
                 <SearchInput icon={icons.search} handlePress={() => {}} />
               </View>
               <TouchableOpacity
@@ -124,12 +160,12 @@ const transaction = () => {
               </TouchableOpacity>
             </View>
             <View className="flex flex-row items-start justify-between my-5">
-              <Text className="flex-1 text-primary text-3xl font-pbold ">
+              <Text className="flex-1 text-primary text-3xl font-pbold">
                 Transaction
               </Text>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={toggleEditMode}>
                 <Text className="flex-2 text-lg font-pmedium text-primary">
-                  Edit
+                  {isEditMode ? "Done" : "Edit"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -140,6 +176,12 @@ const transaction = () => {
       <AddTransactionModal
         visible={isModalVisible}
         onClose={handleCloseModal}
+      />
+      <UpdateTransactionModal
+        visible={isUpdateModalVisible}
+        onClose={handleCloseUpdateModal}
+        onUpdate={handleUpdateTransaction}
+        transaction={selectedTransaction}
       />
       <FilterModal
         visible={isFilterModalVisible}

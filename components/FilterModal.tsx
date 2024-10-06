@@ -101,7 +101,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
                   <TouchableOpacity
                     key={period}
                     onPress={() => setSelectedPeriod(period)}
-                    className={`mr-2 mb-2 px-3 py-1 rounded border ${
+                    className={`mr-2 mb-2 px-3 py-1 rounded border  ${
                       selectedPeriod === period
                         ? "bg-primary border-primary"
                         : "border-primary bg-white"

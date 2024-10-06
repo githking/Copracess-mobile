@@ -29,7 +29,7 @@ const signUp = () => {
     <SafeAreaView className="bg-off-100 h-full">
       <ScrollView className="flex-grow-1">
         <View className="w-full justify-center h-full px-4 py-2">
-          <View className="flex-row justify-start mb-2 mt-0">
+          <View className="flex-row justify-start mb-2 mt-10">
             <Image
               source={images.logo}
               resizeMode="contain"

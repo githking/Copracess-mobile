@@ -34,7 +34,7 @@ const signIn = () => {
           className="w-full justify-center 
         h-full px-4 my-6"
         >
-          <View className="flex-row justify-start mb-2">
+          <View className="flex-row justify-start mb-2 mt-10">
             <Image
               source={images.logo}
               resizeMode="contain"
