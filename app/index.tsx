@@ -1,14 +1,47 @@
+import React, { useState, useEffect } from "react";
 import { View, Text } from "react-native";
-import React from "react";
 import { Link } from "expo-router";
+import { Stack } from "expo-router";
+import SplashScreen from "../components/SplashScreen";
+
+const MainContent = () => (
+  <View className="flex-1 justify-center items-center">
+    <Text className="text-2xl font-pbold">Copracess</Text>
+    <Link href="/home">
+      <Text className="text-blue-500">Go to Home</Text>
+    </Link>
+    <Link href="/signIn">
+      <Text className="text-blue-500">Go to SignIn</Text>
+    </Link>
+    <Link href="/signUp">
+      <Text className="text-blue-500">Go to SignUp</Text>
+    </Link>
+  </View>
+);
 
 export default function App() {
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsSplashVisible(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <View className="flex-1 justify-center items-center">
-      <Text className="text-2xl font-pbold">Copracess</Text>
-      <Link href="/home">Go to Home</Link>
-      <Link href="/signIn">Go to SignIn</Link>
-      <Link href="/signUp">Go to SignUp</Link>
-    </View>
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
+      {isSplashVisible ? (
+        <SplashScreen onFinish={() => setIsSplashVisible(false)} />
+      ) : (
+        <MainContent />
+      )}
+    </>
   );
 }

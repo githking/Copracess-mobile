@@ -5,5 +5,15 @@ import path from "../assets/images/path.png";
 import logoSmall from "../assets/images/logo-small.png";
 import logo from "../assets/images/logo-copra.png";
 import empty from "../assets/images/empty-box.png";
+import LogoSplash from "../assets/images/LogoSplash.png";
 
-export default { profile, thumbnail, cards, path, logo, logoSmall, empty };
+export default {
+  profile,
+  thumbnail,
+  cards,
+  path,
+  logo,
+  logoSmall,
+  empty,
+  LogoSplash,
+};

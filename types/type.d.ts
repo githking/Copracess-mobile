@@ -1,3 +1,6 @@
+export interface SplashScreenProps {
+  onFinish: () => void;
+}
 interface TabIconProps {
   icon: any;
   color: string;

@@ -17,7 +17,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
           iconUrl={images.logo}
           handlePress={() => {}}
           width={200}
-          height={90}
+          height={80}
         />
       </View>
       <View className="flex-row items-center">
