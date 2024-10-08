@@ -76,3 +76,13 @@ export interface UpdateTransactionModalProps {
   onUpdate: (updatedTransaction: Transaction) => void;
   transaction: Transaction | null;
 }
+
+export interface BookingCalendarProps {
+  onDateSelect: (date: string) => void;
+}
+
+interface LogoutModalProps {
+  isVisible: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+}

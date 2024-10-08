@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { View } from "react-native";
-import { Calendar } from "react-native-calendars";
+import { Calendar, DateData } from "react-native-calendars";
+import type { BookingCalendarProps } from "../types/type";
 
-const BookingCalendar = () => {
+const BookingCalendar: React.FC<BookingCalendarProps> = ({ onDateSelect }) => {
+  const [selectedDate, setSelectedDate] = useState("");
   const today = new Date().toISOString().split("T")[0];
 
   const markedDates = {
@@ -15,7 +17,25 @@ const BookingCalendar = () => {
         },
       },
     },
+    [selectedDate]: {
+      selected: true,
+      selectedColor: "#ffffff",
+      customStyles: {
+        container: {
+          borderRadius: 20,
+        },
+        text: {
+          color: "#000000",
+        },
+      },
+    },
   };
+
+  const handleDayPress = (day: DateData) => {
+    setSelectedDate(day.dateString);
+    onDateSelect(day.dateString);
+  };
+
   return (
     <View className="bg-primary rounded-lg p-4">
       <Calendar
@@ -34,6 +54,7 @@ const BookingCalendar = () => {
         markedDates={markedDates}
         markingType={"custom"}
         enableSwipeMonths={true}
+        onDayPress={handleDayPress}
       />
     </View>
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
-import { Tabs, Stack } from "expo-router";
+import { Tabs, Stack, useRouter } from "expo-router";
 import { icons, images } from "../../constants";
 import CustomHeader from "../../components/CustomHeader";
 import ScreenHeaderBtn from "../../components/ScreenHeaderBtn";
@@ -10,11 +10,6 @@ const notificationCount = 3;
 const handleNotificationPress = () => {
   // Handle notification press
   console.log("Notification pressed");
-};
-
-const handleProfilePress = () => {
-  // Handle profile press
-  console.log("Profile pressed");
 };
 
 const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
@@ -34,95 +29,104 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
   </View>
 );
 
-const tabsLayout = () => (
-  <>
-    <Stack.Screen
-      options={{
-        headerShadowVisible: false,
-        headerStyle: {
-          backgroundColor: "white",
-        },
-        header: () => (
-          <CustomHeader
-            notificationCount={notificationCount}
-            onNotificationPress={handleNotificationPress}
-            onProfilePress={handleProfilePress}
-          />
-        ),
-      }}
-    />
-    <Tabs
-      screenOptions={{
-        tabBarShowLabel: false,
-        tabBarActiveTintColor: "#59A60E",
-        tabBarInactiveTintColor: "#080807",
-        tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopWidth: 1,
-          borderTopColor: "#E5E5E5",
-          height: 80,
-        },
-        headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon
-              icon={icons.window}
-              color={color}
-              name="Home"
-              focused={focused}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="transaction"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon
-              icon={icons.records}
-              color={color}
-              name="Transaction"
-              focused={focused}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="booking"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon
-              icon={icons.booking}
-              color={color}
-              name="Booking"
-              focused={focused}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="map"
-        options={{
-          title: "",
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon
-              icon={icons.millmap}
-              color={color}
-              name="Map"
-              focused={focused}
-            />
-          ),
-        }}
-      />
-    </Tabs>
-  </>
-);
+const TabsLayout = () => {
+  const router = useRouter();
 
-export default tabsLayout;
+  const handleProfilePress = () => {
+    // Navigate to the SettingsPage
+    router.push("/settings");
+  };
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          headerShadowVisible: false,
+          headerStyle: {
+            backgroundColor: "white",
+          },
+          header: () => (
+            <CustomHeader
+              notificationCount={notificationCount}
+              onNotificationPress={handleNotificationPress}
+              onProfilePress={handleProfilePress}
+            />
+          ),
+        }}
+      />
+      <Tabs
+        screenOptions={{
+          tabBarShowLabel: false,
+          tabBarActiveTintColor: "#59A60E",
+          tabBarInactiveTintColor: "#080807",
+          tabBarStyle: {
+            backgroundColor: "#FFFFFF",
+            borderTopWidth: 1,
+            borderTopColor: "#E5E5E5",
+            height: 80,
+          },
+          headerShown: false,
+        }}
+      >
+        <Tabs.Screen
+          name="home"
+          options={{
+            title: "",
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.window}
+                color={color}
+                name="Home"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="transaction"
+          options={{
+            title: "",
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.records}
+                color={color}
+                name="Transaction"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="booking"
+          options={{
+            title: "",
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.booking}
+                color={color}
+                name="Booking"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="map"
+          options={{
+            title: "",
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.millmap}
+                color={color}
+                name="Map"
+                focused={focused}
+              />
+            ),
+          }}
+        />
+      </Tabs>
+    </>
+  );
+};
+
+export default TabsLayout;
