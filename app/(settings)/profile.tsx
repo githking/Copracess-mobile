@@ -1,14 +1,14 @@
 import React from "react";
-import SettingsPage from "../../components/SettingsPage";
 import { Stack } from "expo-router";
+import ProfilePage from "../../components/ProfilePage";
 
-const Settings = () => {
+const Profile = () => {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SettingsPage />
+      <ProfilePage />
     </>
   );
 };
 
-export default Settings;
+export default Profile;

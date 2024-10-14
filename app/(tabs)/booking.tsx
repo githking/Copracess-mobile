@@ -38,7 +38,6 @@ const booking = () => {
       <Text className="text-2xl text-primary font-pbold mb-4">
         Book a Delivery
       </Text>
-
       <BookingCalendar onDateSelect={handleDateSelect} />
 
       <View className="mt-4 mb-4">

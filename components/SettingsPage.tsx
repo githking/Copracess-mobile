@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { icons } from "../constants";
 import { FontAwesome } from "@expo/vector-icons";
+import { icons } from "../constants";
 import LogoutModal from "./LogoutModal";
+import { useRouter } from "expo-router";
 
 const SettingsPage = () => {
-  const router = useRouter();
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
+  const router = useRouter();
 
   const handleLogoutPress = () => {
     setIsLogoutModalVisible(true);
@@ -21,6 +21,7 @@ const SettingsPage = () => {
   const handleLogoutConfirm = () => {
     console.log("Logging out...");
     setIsLogoutModalVisible(false);
+    // Implement actual logout logic here
   };
 
   return (
@@ -42,7 +43,10 @@ const SettingsPage = () => {
           <Text className="text-lg font-psemibold">Name</Text>
         </View>
 
-        <TouchableOpacity className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4">
+        <TouchableOpacity
+          className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4"
+          onPress={() => router.push("/profile")}
+        >
           <View className="flex-row items-center">
             <FontAwesome
               name="user"

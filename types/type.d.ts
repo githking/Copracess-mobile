@@ -86,3 +86,27 @@ interface LogoutModalProps {
   onCancel: () => void;
   onConfirm: () => void;
 }
+
+export interface VirtualQueueHeaderProps {
+  queueNumber: string;
+  currentlyUnloading: number;
+  totalTrucks: number;
+  completed: number;
+  onTheWay: number;
+}
+
+export interface QueueItem {
+  id: string;
+  time: string;
+  plateNumber: string;
+  owner: string;
+  date: string;
+}
+
+export interface QueueItem {
+  id: string;
+  time: string;
+  plateNumber: string;
+  owner: string;
+  date: string;
+}

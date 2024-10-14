@@ -124,6 +124,20 @@ const TabsLayout = () => {
             ),
           }}
         />
+        <Tabs.Screen
+          name="queue"
+          options={{
+            title: "",
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.queue}
+                color={color}
+                name="Queue"
+                focused={focused}
+              />
+            ),
+          }}
+        />
       </Tabs>
     </>
   );
