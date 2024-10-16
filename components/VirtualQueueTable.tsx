@@ -2,17 +2,18 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Image,
-  ScrollView,
-  StyleSheet,
+  FlatList,
+  Dimensions,
+  SafeAreaView,
 } from "react-native";
-import { Table, Row, Rows } from "react-native-table-component";
 import { icons } from "../constants";
 import SearchInput from "./SearchInput";
 import FilterModal from "./FilterModal";
 import type { QueueItem, Filters } from "../types/type";
+
+const windowWidth = Dimensions.get("window").width;
 
 const Trucks: QueueItem[] = [
   {
@@ -61,7 +62,7 @@ const Trucks: QueueItem[] = [
     id: "252",
     time: "11:43 am",
     plateNumber: "BAN571",
-    owner: "Kalisso Jade",
+    owner: "Kalisto Jade",
     date: "4/9/2024",
   },
   {
@@ -94,19 +95,8 @@ const Trucks: QueueItem[] = [
   },
 ];
 
-const VirtualQueueTable: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+const VirtualQueueFlatList: React.FC = () => {
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const tableHead = ["#", "TIME", "PLATE NUMBER", "OWNER", "DATE"];
-  const widthArr = [40, 80, 100, 140, 80];
-
-  const tableData = Trucks.map((item) => [
-    item.id,
-    item.time,
-    item.plateNumber,
-    item.owner,
-    item.date,
-  ]);
 
   const handleOpenFilterModal = () => {
     setIsFilterModalVisible(true);
@@ -121,13 +111,41 @@ const VirtualQueueTable: React.FC = () => {
     handleCloseFilterModal();
   };
 
-  return (
-    <View className="bg-white rounded-lg p-4">
+  const renderItem = ({ item, index }: { item: QueueItem; index: number }) => (
+    <View
+      className={`bg-white rounded-lg p-3 mb-2 flex-row ${
+        index === 0 ? "border-2 border-secondary-100" : ""
+      }`}
+    >
+      <View className="w-1/5 justify-center">
+        <Text className="text-lg font-bold text-primary">#{item.id}</Text>
+        <Text className="text-xs text-gray-500">{item.time}</Text>
+      </View>
+      <View className="w-2/5 justify-center">
+        <Text className="text-sm font-semibold">{item.owner}</Text>
+        <Text className="text-xs text-gray-500">{item.plateNumber}</Text>
+      </View>
+      <View className="w-2/5 items-end justify-center">
+        <Text className="text-sm">{item.date}</Text>
+        {index === 0 && (
+          <Text className="text-xs text-secondary-200 font-semibold">
+            Currently Unloading
+          </Text>
+        )}
+      </View>
+    </View>
+  );
+
+  const ListHeaderComponent = () => (
+    <>
       <View className="flex-row items-center mb-4">
-        <View className="flex-1 flex-row items-center ">
+        <View className="flex-1 mr-2">
           <SearchInput icon={icons.search} handlePress={() => {}} />
         </View>
-        <TouchableOpacity className="ml-2" onPress={handleOpenFilterModal}>
+        <TouchableOpacity
+          onPress={handleOpenFilterModal}
+          className="bg-white p-2 rounded"
+        >
           <Image
             source={icons.filter}
             className="w-6 h-6"
@@ -135,41 +153,39 @@ const VirtualQueueTable: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
+    </>
+  );
 
-      <ScrollView horizontal={true}>
-        <View>
-          <Table borderStyle={{ borderWidth: 1, borderColor: "#C1C0B9" }}>
-            <Row
-              data={tableHead}
-              widthArr={widthArr}
-              style={{ height: 50, backgroundColor: "#FFFFFF" }}
-              textStyle={{ textAlign: "center", fontWeight: "bold" }}
-            />
-            <Rows
-              data={tableData}
-              widthArr={widthArr}
-              style={[{ height: 40 }]}
-              textStyle={{ textAlign: "center" }}
-            />
-          </Table>
-        </View>
-      </ScrollView>
+  const ListFooterComponent = () => (
+    <View className="flex-row justify-between mt-4">
+      <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
+        <Text className="text-primary font-medium">PREVIOUS</Text>
+      </TouchableOpacity>
+      <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
+        <Text className="text-primary font-medium">NEXT</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-      <View className="flex-row justify-between mt-4">
-        <TouchableOpacity className="bg-white border border-primary rounded-lg px-4 py-2">
-          <Text className="text-primary font-pmedium">PREVIOUS</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="bg-white border border-primary rounded-lg px-4 py-2">
-          <Text className="text-primary font-pmedium">NEXT</Text>
-        </TouchableOpacity>
-      </View>
+  return (
+    <SafeAreaView className="bg-primary flex-1">
+      <FlatList
+        data={Trucks}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={ListFooterComponent}
+        contentContainerStyle={{ padding: 16 }}
+        showsVerticalScrollIndicator={false}
+      />
+
       <FilterModal
         visible={isFilterModalVisible}
         onClose={handleCloseFilterModal}
         onApplyFilters={handleApplyFilters}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
-export default VirtualQueueTable;
+export default VirtualQueueFlatList;

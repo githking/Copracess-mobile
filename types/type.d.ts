@@ -110,3 +110,24 @@ export interface QueueItem {
   owner: string;
   date: string;
 }
+
+export interface Booking {
+  id: string;
+  destination: string;
+  date: string;
+  weight: string;
+  plateNumber: string;
+  status: string;
+}
+
+export interface BookingHistorySidebarProps {
+  isVisible: boolean;
+  onClose: () => void;
+  bookingHistory: Booking[];
+}
+
+export interface QRCodeModalProps {
+  isVisible: boolean;
+  onClose: () => void;
+  qrCodeData: string;
+}
