@@ -168,7 +168,7 @@ const VirtualQueueFlatList: React.FC = () => {
   );
 
   return (
-    <SafeAreaView className="bg-primary flex-1">
+    <SafeAreaView className="bg-primary flex-1 rounded-lg">
       <FlatList
         data={Trucks}
         renderItem={renderItem}
@@ -177,6 +177,7 @@ const VirtualQueueFlatList: React.FC = () => {
         ListFooterComponent={ListFooterComponent}
         contentContainerStyle={{ padding: 16 }}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={false}
       />
 
       <FilterModal

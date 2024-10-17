@@ -8,7 +8,7 @@ import {
 import React, { useState } from "react";
 import BookingCalendar from "../../components/BookingCalendar";
 import { Picker } from "@react-native-picker/picker";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome } from "@expo/vector-icons";
 import BookingHistorySidebar from "../../components/BookingSideBar";
 
 const dummyBookingHistory = [
@@ -71,8 +71,11 @@ const booking = () => {
           <Text className="text-2xl text-primary font-pbold">
             Book a Delivery
           </Text>
-          <TouchableOpacity onPress={() => setIsHistorySidebarVisible(true)}>
-            <Ionicons name="time-outline" size={24} color="#59A60E" />
+          <TouchableOpacity
+            className="bg-white p-2 rounded-lg border border-primary"
+            onPress={() => setIsHistorySidebarVisible(true)}
+          >
+            <FontAwesome name="history" size={24} color="#59A60E" />
           </TouchableOpacity>
         </View>
 
