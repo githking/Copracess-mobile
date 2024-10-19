@@ -131,3 +131,16 @@ export interface QRCodeModalProps {
   onClose: () => void;
   qrCodeData: string;
 }
+
+export interface SetPriceModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onSetPrice: (date: string, price: number) => void;
+  selectedDate: string;
+}
+
+export interface PriceCardProps {
+  title: string;
+  price: string;
+  subtitle?: string;
+}

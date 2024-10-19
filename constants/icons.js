@@ -20,6 +20,7 @@ import edit from "../assets/icons/edit.png";
 import notification from "../assets/icons/notification.png";
 import user from "../assets/icons/user.png";
 import queue from "../assets/icons/queue.png";
+import price from "../assets/icons/price.png";
 
 export default {
   play,
@@ -44,4 +45,5 @@ export default {
   notification,
   user,
   queue,
+  price,
 };

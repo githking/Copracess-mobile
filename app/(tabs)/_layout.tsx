@@ -138,6 +138,20 @@ const TabsLayout = () => {
             ),
           }}
         />
+        <Tabs.Screen
+          name="price"
+          options={{
+            title: "",
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.price}
+                color={color}
+                name="price"
+                focused={focused}
+              />
+            ),
+          }}
+        />
       </Tabs>
     </>
   );
