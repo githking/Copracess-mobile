@@ -8,7 +8,7 @@ import { images } from "../../constants";
 const home = () => {
   return (
     <View>
-      <Text>home</Text>
+      <Text>Copra Owner Home</Text>
     </View>
   );
 };

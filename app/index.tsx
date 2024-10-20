@@ -7,8 +7,11 @@ import SplashScreen from "../components/SplashScreen";
 const MainContent = () => (
   <View className="flex-1 justify-center items-center">
     <Text className="text-2xl font-pbold">Copracess</Text>
-    <Link href="/home">
-      <Text className="text-blue-500">Go to Home</Text>
+    <Link href="/(copraowner)/home">
+      <Text className="text-blue-500">Go to Copra Owner Home</Text>
+    </Link>
+    <Link href="/(oilmill)/home">
+      <Text className="text-blue-500">Go to Oilmill Home</Text>
     </Link>
     <Link href="/signIn">
       <Text className="text-blue-500">Go to SignIn</Text>
