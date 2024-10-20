@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { View, Text } from "react-native";
-import { Link } from "expo-router";
-import { Stack } from "expo-router";
+import { Link, Redirect, Stack } from "expo-router";
 import SplashScreen from "../components/SplashScreen";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { useAuth } from "@clerk/clerk-expo";
 
 const MainContent = () => (
   <View className="flex-1 justify-center items-center">
@@ -23,6 +24,7 @@ const MainContent = () => (
 );
 
 export default function App() {
+  const { isSignedIn } = useAuth();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   useEffect(() => {
@@ -32,6 +34,10 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  if (isSignedIn) {
+    return <Redirect href={"/(copraowner)/home"} />;
+  }
 
   return (
     <>
