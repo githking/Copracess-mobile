@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet } from "react-native";
 import React, { useEffect } from "react";
-import { Slot, SplashScreen, Stack } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import RootAuth from "../clerk/clerk";
 
 const rootLayout = () => {
   const [fontsLoaded, error] = useFonts({
@@ -24,10 +25,13 @@ const rootLayout = () => {
   }, [fontsLoaded, error]);
 
   if (!fontsLoaded && !error) return null;
+
   return (
-    <Stack>
-      <Stack.Screen name="index" />
-    </Stack>
+    <RootAuth>
+      <Stack>
+        <Stack.Screen name="index" />
+      </Stack>
+    </RootAuth>
   );
 };
 

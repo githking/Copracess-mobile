@@ -23,8 +23,8 @@ const signIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const submit = () => {
-    // Handle submit logic
+  const submit = async () => {
+    console.log(form);
   };
 
   return (

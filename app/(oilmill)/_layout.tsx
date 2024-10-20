@@ -97,34 +97,6 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="booking"
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.booking}
-                color={color}
-                name="Booking"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="map"
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.millmap}
-                color={color}
-                name="Map"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
           name="queue"
           options={{
             title: "",

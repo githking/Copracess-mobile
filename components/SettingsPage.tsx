@@ -21,6 +21,7 @@ const SettingsPage = () => {
   const handleLogoutConfirm = () => {
     console.log("Logging out...");
     setIsLogoutModalVisible(false);
+    router.push("/");
     // Implement actual logout logic here
   };
 

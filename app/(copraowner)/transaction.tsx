@@ -12,10 +12,10 @@ import { images } from "../../constants";
 import { icons } from "../../constants";
 import TransactionCard from "../../components/transactionCard";
 import AddFab from "../../components/AddFab";
-import AddTransactionModal from "./../../components/AddTransactionModal";
+import AddTransactionModal from "../../components/AddTransactionModal";
 import UpdateTransactionModal from "../../components/UpdateTransactionModal";
-import SearchInput from "./../../components/SearchInput";
-import FilterModal from "./../../components/FilterModal";
+import SearchInput from "../../components/SearchInput";
+import FilterModal from "../../components/FilterModal";
 import type { Filters, Transaction } from "../../types/type";
 
 const transactions = [

@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { View, Text } from "react-native";
-import { Link } from "expo-router";
-import { Stack } from "expo-router";
+import { Link, Redirect, Stack } from "expo-router";
 import SplashScreen from "../components/SplashScreen";
+import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
+import { useAuth } from "@clerk/clerk-expo";
 
 const MainContent = () => (
   <View className="flex-1 justify-center items-center">
     <Text className="text-2xl font-pbold">Copracess</Text>
-    <Link href="/home">
-      <Text className="text-blue-500">Go to Home</Text>
+    <Link href="/(copraowner)/home">
+      <Text className="text-blue-500">Go to Copra Owner Home</Text>
+    </Link>
+    <Link href="/(oilmill)/home">
+      <Text className="text-blue-500">Go to Oilmill Home</Text>
     </Link>
     <Link href="/signIn">
       <Text className="text-blue-500">Go to SignIn</Text>
