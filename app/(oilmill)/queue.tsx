@@ -1,11 +1,9 @@
 import React, { useState, useRef } from "react";
 import {
   View,
-  ScrollView,
   SafeAreaView,
   StatusBar,
   TouchableOpacity,
-  Text,
   Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
