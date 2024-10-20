@@ -1,47 +1,47 @@
-import { ClerkProvider, ClerkLoaded } from "@clerk/clerk-expo";
-import { Slot } from "expo-router";
-import * as SecureStore from "expo-secure-store";
+import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
+import { Slot, useRouter, useSegments } from "expo-router";
+import { useEffect } from "react";
+import { tokenCache } from "./tokex";
 
-export default function RootAuth({
-  children,
-}: {
-  children: React.JSX.Element;
-}) {
-  const tokenCache = {
-    async getToken(key: string) {
-      try {
-        const item = await SecureStore.getItemAsync(key);
-        if (item) {
-          console.log(`${key} was used 🔐 \n`);
-        } else {
-          console.log("No values stored under key: " + key);
-        }
-        return item;
-      } catch (error) {
-        console.error("SecureStore get item error: ", error);
-        await SecureStore.deleteItemAsync(key);
-        return null;
-      }
-    },
-    async saveToken(key: string, value: string) {
-      try {
-        return SecureStore.setItemAsync(key, value);
-      } catch (err) {
-        return;
-      }
-    },
-  };
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
-  const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
+if (!publishableKey) {
+  throw new Error(
+    "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env"
+  );
+}
 
-  if (!publishableKey) {
-    throw new Error(
-      "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env"
-    );
-  }
+interface RootAuthProps {
+  children: React.ReactNode;
+}
+
+function InitialLayout({ children }: RootAuthProps) {
+  const { isLoaded, isSignedIn } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isLoaded) return;
+
+    const inTabsGroup = segments[0] === "(auth)";
+    console.log("isSignedIn", isSignedIn);
+
+    if (isSignedIn && !inTabsGroup) {
+      router.replace("/(copraowner)/home");
+    } else if (!isSignedIn) {
+      router.replace("/signIn");
+    }
+  }, [isSignedIn]);
+
+  return <>{children}</>;
+}
+
+export default function RootAuth({ children }: RootAuthProps) {
   return (
     <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <ClerkLoaded>{children}</ClerkLoaded>
+      <ClerkLoaded>
+        <InitialLayout>{children}</InitialLayout>
+      </ClerkLoaded>
     </ClerkProvider>
   );
 }

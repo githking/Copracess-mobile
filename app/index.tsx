@@ -24,7 +24,6 @@ const MainContent = () => (
 );
 
 export default function App() {
-  const { isSignedIn } = useAuth();
   const [isSplashVisible, setIsSplashVisible] = useState(true);
 
   useEffect(() => {
@@ -34,10 +33,6 @@ export default function App() {
 
     return () => clearTimeout(timer);
   }, []);
-
-  if (isSignedIn) {
-    return <Redirect href={"/(copraowner)/home"} />;
-  }
 
   return (
     <>
