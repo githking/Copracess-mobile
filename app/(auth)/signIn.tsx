@@ -6,16 +6,21 @@ import {
   View,
   Text,
 } from "react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import { useSignIn } from "@clerk/clerk-expo";
 
 import { images } from "../../constants";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
+import axios from "axios";
 
 const signIn = () => {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const router = useRouter();
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -23,9 +28,47 @@ const signIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const submit = async () => {
-    console.log(form);
+  const checkEmailExists = async (email: string, password: string) => {
+    try {
+      const response = await axios.post(
+        `https://www.copracess.live/api/mobile/user`,
+        {
+          email: email,
+          password: password,
+        }
+      );
+      // Assuming the backend returns a user object if the email exists.
+      console.log(response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error checking email:", error);
+      return false;
+    }
   };
+
+  const submit = useCallback(async () => {
+    if (!isLoaded) {
+      return;
+    }
+
+    await checkEmailExists(form.email, form.password);
+
+    // try {
+    //   const signInAttempt = await signIn.create({
+    //     identifier: form.email,
+    //     password: form.password,
+    //   });
+
+    //   if (signInAttempt.status === "complete") {
+    //     await setActive({ session: signInAttempt.createdSessionId });
+    //     router.replace("/");
+    //   } else {
+    //     console.error(JSON.stringify(signInAttempt, null, 2));
+    //   }
+    // } catch (err: any) {
+    //   console.error(JSON.stringify(err, null, 2));
+    // }
+  }, [isLoaded, form]);
 
   return (
     <SafeAreaView className="bg-off-100 h-full">
