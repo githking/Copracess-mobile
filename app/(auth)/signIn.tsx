@@ -10,15 +10,17 @@ import { useCallback, useState } from "react";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { useSignIn } from "@clerk/clerk-expo";
+import { useSignIn, useSignUp, useClerk } from "@clerk/clerk-expo";
 
 import { images } from "../../constants";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
 import axios from "axios";
+import { checkEmailExists } from "../../utils/actions/checkEmail";
 
 const signIn = () => {
   const { signIn, setActive, isLoaded } = useSignIn();
+  const { signUp } = useSignUp();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -28,46 +30,46 @@ const signIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const checkEmailExists = async (email: string, password: string) => {
-    try {
-      const response = await axios.post(
-        `https://www.copracess.live/api/mobile/user`,
-        {
-          email: email,
-          password: password,
-        }
-      );
-      // Assuming the backend returns a user object if the email exists.
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error("Error checking email:", error);
-      return false;
-    }
-  };
-
   const submit = useCallback(async () => {
     if (!isLoaded) {
       return;
     }
 
-    await checkEmailExists(form.email, form.password);
+    const user = await checkEmailExists(form.email, form.password);
 
-    // try {
-    //   const signInAttempt = await signIn.create({
-    //     identifier: form.email,
-    //     password: form.password,
-    //   });
+    if (!user) {
+      console.error("Invalid credentials.");
+      setIsSubmitting(false);
+      return;
+    }
 
-    //   if (signInAttempt.status === "complete") {
-    //     await setActive({ session: signInAttempt.createdSessionId });
-    //     router.replace("/");
-    //   } else {
-    //     console.error(JSON.stringify(signInAttempt, null, 2));
-    //   }
-    // } catch (err: any) {
-    //   console.error(JSON.stringify(err, null, 2));
-    // }
+    try {
+      const signInAttempt = await signIn.create({
+        identifier: form.email,
+        password: form.password,
+      });
+
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        if (user.role === "COPRA_BUYER") {
+          router.replace("/(copraowner)/home");
+        } else if (
+          user.role === "OIL_MILL_MANAGER" ||
+          user.role === "OIL_MILL_MEMBER"
+        ) {
+          router.replace("/(oilmill)/home");
+        }
+      } else {
+        console.error(
+          "Sign-in not complete:",
+          JSON.stringify(signInAttempt, null, 2)
+        );
+      }
+    } catch (err: any) {
+      console.error("Error during sign-in:", JSON.stringify(err, null, 2));
+    } finally {
+      setIsSubmitting(false);
+    }
   }, [isLoaded, form]);
 
   return (
