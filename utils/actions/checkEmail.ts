@@ -5,7 +5,7 @@ export const checkEmailExists = async (email: string, password: string) => {
   try {
     const response = await axios.post(
       // `https://www.copracess.live/api/mobile/user`,
-      `http://192.168.0.231:3000/api/mobile/user`,
+      `http://192.168.1.200:3000/api/mobile/user`,
       {
         email: email,
         password: password,
@@ -19,13 +19,22 @@ export const checkEmailExists = async (email: string, password: string) => {
   }
 };
 
-const checkEmailInClerk = async (email: string) => {
-  const { client } = useClerk();
+export const checkClerkUserExists = async (email: string) => {
   try {
-    const users = await client.users.getUserList({ email });
-    return users.length > 0; // Returns true if user exists, false otherwise
+    const apiKey = process.env.EXPO_PUBLIC_CLERK_SECRET_KEY;
+    const response = await axios.get(`https://api.clerk.dev/v1/users`, {
+      params: {
+        email_address: email,
+      },
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    const users = response.data;
+    return users.length > 0 ? users[0] : null;
   } catch (error) {
-    console.error("Error checking email in Clerk:", error);
-    return false; // In case of an error, return false
+    console.error("Error checking user in Clerk:", error);
+    return null;
   }
 };

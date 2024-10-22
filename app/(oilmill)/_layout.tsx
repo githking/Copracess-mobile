@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { Tabs, Stack, useRouter } from "expo-router";
 import { icons, images } from "../../constants";
 import CustomHeader from "../../components/CustomHeader";
 import ScreenHeaderBtn from "../../components/ScreenHeaderBtn";
 import { TabIconProps } from "../../types/type";
+import { useClerk } from "@clerk/clerk-expo";
+import SplashScreen from "../../components/SplashScreen";
 
 const notificationCount = 3;
 const handleNotificationPress = () => {
@@ -33,7 +35,6 @@ const TabsLayout = () => {
   const router = useRouter();
 
   const handleProfilePress = () => {
-    // Navigate to the SettingsPage
     router.push("/settings");
   };
 

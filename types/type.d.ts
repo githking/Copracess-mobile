@@ -150,3 +150,24 @@ export interface TokenCache {
   saveToken: (key: string, token: string) => Promise<void>;
   clearToken?: (key: string) => void;
 }
+
+export interface SignInForm {
+  email: string;
+  password: string;
+}
+
+export interface User {
+  createdAt: string;
+  email: string;
+  emailVerified: string;
+  id: string;
+  image: string;
+  isActive: boolean;
+  isTwoFactorEnabled: boolean;
+  name: string;
+  organizationId: string | null;
+  password: string;
+  position: string | null;
+  role: "OIL_MILL_MANAGER" | "OIL_MILL_MEMBER" | "COPRA_BUYER";
+  updatedAt: string;
+}
