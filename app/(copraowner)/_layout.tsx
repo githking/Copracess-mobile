@@ -95,6 +95,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="home"
           options={{
+            href: "/home",
             title: "",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -109,6 +110,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="transaction"
           options={{
+            href: "/transaction",
             title: "",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -123,6 +125,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="booking"
           options={{
+            href: "/booking",
             title: "",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -137,6 +140,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="map"
           options={{
+            href: "/map",
             title: "",
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -146,6 +150,12 @@ const TabsLayout = () => {
                 focused={focused}
               />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="settings"
+          options={{
+            href: null,
           }}
         />
       </Tabs>
