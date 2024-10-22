@@ -55,7 +55,7 @@ const signIn = () => {
       if (clerkUser) {
         await loginClerk(signIn, setActive, form, user, router);
       } else {
-        await signupClerk(signUp, setActive, form, user, router);
+        await signupClerk(signIn, setActive, form, user, router);
       }
     } catch (error) {
       console.error("An error occurred during the submit process:", error);

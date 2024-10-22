@@ -1,11 +1,12 @@
+import axios from "axios";
 import { SignInForm, User } from "../../types/type";
 
 export const loginClerk = async (
-  signIn: any, // type appropriately as needed
-  setActive: any, // type appropriately as needed
+  signIn: any,
+  setActive: any,
   form: SignInForm,
   user: User,
-  router: any // type appropriately as needed
+  router: any
 ) => {
   if (!signIn) {
     console.error("signIn resource is unavailable.");
@@ -40,25 +41,48 @@ export const loginClerk = async (
 };
 
 export const signupClerk = async (
-  signUp: any,
+  signIn: any,
   setActive: any,
   form: SignInForm,
   user: User,
   router: any
 ) => {
-  if (!signUp) {
+  if (!signIn) {
     console.error("signUp resource is unavailable.");
     return false;
   }
 
   try {
-    const createdUser = await signUp.create({
-      emailAddress: form.email,
+    const apiKey = process.env.EXPO_PUBLIC_CLERK_SECRET_KEY;
+    const response = await axios.post(
+      `https://api.clerk.dev/v1/users`,
+      {
+        email_address: [form.email],
+        password: form.password,
+        skip_password_checks: true,
+        skip_password_requirement: true,
+        private_metadata: {
+          role: user.role,
+          position: user.position,
+          organizationId: user.organizationId,
+          image: user.image,
+          webID: user.id,
+        },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }
+    );
+
+    const signInAttempt = await signIn.create({
+      identifier: form.email,
       password: form.password,
     });
 
-    if (createdUser.status === "complete") {
-      await setActive({ session: createdUser.createdSessionId });
+    if (signInAttempt.status === "complete") {
+      await setActive({ session: signInAttempt.createdSessionId });
       if (user.role === "COPRA_BUYER") {
         router.replace("/(copraowner)/home");
       } else if (
@@ -70,10 +94,13 @@ export const signupClerk = async (
     } else {
       console.error(
         "Sign-in not complete:",
-        JSON.stringify(createdUser, null, 2)
+        JSON.stringify(signInAttempt, null, 2)
       );
     }
+
+    return response.data;
   } catch (error) {
-    console.error("An error occurred during signup:", error);
+    console.error("Error checking email:", error);
+    return false;
   }
 };
