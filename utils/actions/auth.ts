@@ -61,7 +61,7 @@ export const signupClerk = async (
         password: form.password,
         skip_password_checks: true,
         skip_password_requirement: true,
-        private_metadata: {
+        public_metadata: {
           role: user.role,
           position: user.position,
           organizationId: user.organizationId,
