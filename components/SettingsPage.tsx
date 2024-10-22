@@ -5,10 +5,12 @@ import { FontAwesome } from "@expo/vector-icons";
 import { icons } from "../constants";
 import LogoutModal from "./LogoutModal";
 import { useRouter } from "expo-router";
+import { useClerk } from "@clerk/clerk-expo";
 
 const SettingsPage = () => {
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const router = useRouter();
+  const { signOut } = useClerk();
 
   const handleLogoutPress = () => {
     setIsLogoutModalVisible(true);
@@ -18,11 +20,16 @@ const SettingsPage = () => {
     setIsLogoutModalVisible(false);
   };
 
-  const handleLogoutConfirm = () => {
+  const handleLogoutConfirm = async () => {
     console.log("Logging out...");
-    setIsLogoutModalVisible(false);
-    router.push("/");
-    // Implement actual logout logic here
+    try {
+      setIsLogoutModalVisible(false);
+
+      await signOut();
+      router.replace("/(auth)/signIn");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   return (

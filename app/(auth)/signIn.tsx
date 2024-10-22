@@ -11,66 +11,58 @@ import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import { useSignIn, useSignUp, useClerk } from "@clerk/clerk-expo";
-
 import { images } from "../../constants";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
-import axios from "axios";
-import { checkEmailExists } from "../../utils/actions/checkEmail";
+import {
+  checkClerkUserExists,
+  checkEmailExists,
+} from "../../utils/actions/checkEmail";
+import { SignInForm } from "../../types/type";
+import { loginClerk, signupClerk } from "../../utils/actions/auth";
 
 const signIn = () => {
   const { signIn, setActive, isLoaded } = useSignIn();
   const { signUp } = useSignUp();
   const router = useRouter();
+  const { client } = useClerk();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<SignInForm>({
     email: "",
     password: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
 
   const submit = useCallback(async () => {
     if (!isLoaded) {
       return;
     }
 
-    const user = await checkEmailExists(form.email, form.password);
-
-    if (!user) {
-      console.error("Invalid credentials.");
-      setIsSubmitting(false);
-      return;
-    }
+    setIsSubmitting(true);
 
     try {
-      const signInAttempt = await signIn.create({
-        identifier: form.email,
-        password: form.password,
-      });
+      const user = await checkEmailExists(form.email, form.password);
 
-      if (signInAttempt.status === "complete") {
-        await setActive({ session: signInAttempt.createdSessionId });
-        if (user.role === "COPRA_BUYER") {
-          router.replace("/(copraowner)/home");
-        } else if (
-          user.role === "OIL_MILL_MANAGER" ||
-          user.role === "OIL_MILL_MEMBER"
-        ) {
-          router.replace("/(oilmill)/home");
-        }
-      } else {
-        console.error(
-          "Sign-in not complete:",
-          JSON.stringify(signInAttempt, null, 2)
-        );
+      if (!user) {
+        console.error("Invalid credentials. User not found in API.");
+        setIsSubmitting(false);
+        return;
       }
-    } catch (err: any) {
-      console.error("Error during sign-in:", JSON.stringify(err, null, 2));
+
+      const clerkUser = await checkClerkUserExists(form.email);
+
+      if (clerkUser) {
+        await loginClerk(signIn, setActive, form, user, router);
+      } else {
+        await signupClerk(signUp, setActive, form, user, router);
+      }
+    } catch (error) {
+      console.error("An error occurred during the submit process:", error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [isLoaded, form]);
+  }, [isLoaded, form, signIn, setActive, signupClerk, loginClerk, router]);
 
   return (
     <SafeAreaView className="bg-off-100 h-full">
