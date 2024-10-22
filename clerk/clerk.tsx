@@ -1,7 +1,7 @@
 import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
 import { Slot, useRouter, useSegments } from "expo-router";
-import { useEffect } from "react";
-import { tokenCache } from "./tokex";
+import { useEffect, useState } from "react";
+import { tokenCache } from "./token";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -17,21 +17,26 @@ interface RootAuthProps {
 
 function InitialLayout({ children }: RootAuthProps) {
   const { isLoaded, isSignedIn } = useAuth();
+  const [role, setRole] = useState<"copraOwner" | "Oilmill">("copraOwner");
   const segments = useSegments();
   const router = useRouter();
 
   useEffect(() => {
-    if (isLoaded) return;
-
     const inTabsGroup = segments[0] === "(auth)";
     console.log("isSignedIn", isSignedIn);
 
     if (isSignedIn && !inTabsGroup) {
-      router.replace("/(copraowner)/home");
+      if (role === "copraOwner") {
+        router.replace("/(copraowner)/home");
+      } else if (role === "Oilmill") {
+        router.replace("/(oilmill)/home");
+      } else {
+        router.replace("/");
+      }
     } else if (!isSignedIn) {
       router.replace("/signIn");
     }
-  }, [isSignedIn]);
+  }, [isSignedIn, role]);
 
   return <>{children}</>;
 }

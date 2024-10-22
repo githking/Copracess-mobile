@@ -6,16 +6,23 @@ import {
   View,
   Text,
 } from "react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
+import { useSignIn, useSignUp, useClerk } from "@clerk/clerk-expo";
 
 import { images } from "../../constants";
 import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
+import axios from "axios";
+import { checkEmailExists } from "../../utils/actions/checkEmail";
 
 const signIn = () => {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const { signUp } = useSignUp();
+  const router = useRouter();
+
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -23,9 +30,47 @@ const signIn = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const submit = async () => {
-    console.log(form);
-  };
+  const submit = useCallback(async () => {
+    if (!isLoaded) {
+      return;
+    }
+
+    const user = await checkEmailExists(form.email, form.password);
+
+    if (!user) {
+      console.error("Invalid credentials.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const signInAttempt = await signIn.create({
+        identifier: form.email,
+        password: form.password,
+      });
+
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        if (user.role === "COPRA_BUYER") {
+          router.replace("/(copraowner)/home");
+        } else if (
+          user.role === "OIL_MILL_MANAGER" ||
+          user.role === "OIL_MILL_MEMBER"
+        ) {
+          router.replace("/(oilmill)/home");
+        }
+      } else {
+        console.error(
+          "Sign-in not complete:",
+          JSON.stringify(signInAttempt, null, 2)
+        );
+      }
+    } catch (err: any) {
+      console.error("Error during sign-in:", JSON.stringify(err, null, 2));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isLoaded, form]);
 
   return (
     <SafeAreaView className="bg-off-100 h-full">
