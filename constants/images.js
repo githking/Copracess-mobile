@@ -6,6 +6,8 @@ import logoSmall from "../assets/images/logo-small.png";
 import logo from "../assets/images/logo-copra.png";
 import empty from "../assets/images/empty-box.png";
 import LogoSplash from "../assets/images/LogoSplash.png";
+import maps from "../assets/images/maps.png";
+import oilmill from "../assets/images/oilmill.jpg";
 
 export default {
   profile,
@@ -16,4 +18,6 @@ export default {
   logoSmall,
   empty,
   LogoSplash,
+  maps,
+  oilmill,
 };

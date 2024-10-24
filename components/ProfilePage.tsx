@@ -5,9 +5,11 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  Image,
 } from "react-native";
-import { FontAwesome } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { icons } from "../constants";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -15,26 +17,27 @@ const ProfilePage = () => {
   return (
     <ScrollView className="flex-1 bg-off-100">
       <View className="px-4 py-2 mt-14">
-        {/* Header */}
         <View className="flex-row justify-between items-center mb-6">
           <TouchableOpacity onPress={() => router.back()}>
-            <FontAwesome name="angle-left" size={30} color="#59A60E" />
+            <FontAwesome5 name="arrow-left" size={30} color="#59A60E" />
           </TouchableOpacity>
           <Text className="text-2xl font-pbold text-primary">PROFILE</Text>
           <TouchableOpacity>
-            <FontAwesome name="pencil" size={24} color="#59A60E" />
+            <FontAwesome5 name="edit" size={24} color="#59A60E" />
           </TouchableOpacity>
         </View>
 
-        {/* Profile Picture */}
         <View className="items-center mb-6">
           <View className="w-24 h-24 bg-primary rounded-full justify-center items-center mb-2">
-            <FontAwesome name="user" size={50} color="white" />
+            <Image
+              source={icons.profile}
+              className="w-14 h-14"
+              tintColor="white"
+            />
           </View>
-          <Text className="text-lg font-psemibold">Christian</Text>
+          <Text className="text-lg font-psemibold">Name</Text>
         </View>
 
-        {/* Form Fields */}
         <View className="space-y-4">
           <View>
             <Text className="text-sm font-psemibold mb-1">Username</Text>

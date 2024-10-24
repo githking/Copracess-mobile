@@ -67,7 +67,10 @@ const SettingsPage = () => {
           <FontAwesome name="angle-right" size={24} color="#59A60E" />
         </TouchableOpacity>
 
-        <TouchableOpacity className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4">
+        <TouchableOpacity
+          className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4"
+          onPress={() => router.push("/organization")}
+        >
           <View className="flex-row items-center">
             <FontAwesome
               name="building"
@@ -80,7 +83,10 @@ const SettingsPage = () => {
           <FontAwesome name="angle-right" size={24} color="#59A60E" />
         </TouchableOpacity>
 
-        <TouchableOpacity className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4">
+        <TouchableOpacity
+          className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4"
+          onPress={() => router.push("/security")}
+        >
           <View className="flex-row items-center">
             <FontAwesome
               name="lock"

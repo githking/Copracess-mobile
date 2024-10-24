@@ -145,6 +145,29 @@ export interface PriceCardProps {
   subtitle?: string;
 }
 
+export interface Mill {
+  id: string;
+  name: string;
+  location: string;
+  contact: string;
+  distance: string;
+  image: string;
+  rating: number;
+  status: "Open" | "Closed";
+  operatingHours: string;
+}
+
+export interface MillCardProps {
+  mill: Mill;
+  onBookPress?: (millId: string) => void;
+  variant: "map" | "list";
+}
+
+export interface ListViewProps {
+  oilMills: Mill[];
+  onSwitchView: () => void;
+}
+
 export interface TokenCache {
   getToken: (key: string) => Promise<string | undefined | null>;
   saveToken: (key: string, token: string) => Promise<void>;
