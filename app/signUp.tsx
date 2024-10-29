@@ -1,12 +1,11 @@
 import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link } from "expo-router";
-import { images } from "../../constants";
-import FormField from "../../components/FormField";
-import PhoneInput from "react-native-phone-number-input";
+import { images } from "@/constants";
+import FormField from "@/components/FormField";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 

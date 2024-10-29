@@ -1,51 +1,114 @@
-import React, { useState, useEffect } from "react";
-import { View, Text } from "react-native";
-import { Link, Redirect, Stack } from "expo-router";
-import SplashScreen from "../components/SplashScreen";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { useAuth } from "@clerk/clerk-expo";
+import {
+  SafeAreaView,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  View,
+  Text,
+} from "react-native";
+import { useCallback, useState } from "react";
+import CheckBox from "react-native-check-box";
+import { FontAwesome } from "@expo/vector-icons";
+import { Link, useRouter } from "expo-router";
+import { images } from "@/constants";
+import FormField from "@/components/FormField";
+import CustomButton from "@/components/CustomButton";
 
-const MainContent = () => (
-  <View className="flex-1 justify-center items-center">
-    <Text className="text-2xl font-pbold">Copracess</Text>
-    <Link href="/(copraowner)/home">
-      <Text className="text-blue-500">Go to Copra Owner Home</Text>
-    </Link>
-    <Link href="/(oilmill)/home">
-      <Text className="text-blue-500">Go to Oilmill Home</Text>
-    </Link>
-    <Link href="/signIn">
-      <Text className="text-blue-500">Go to SignIn</Text>
-    </Link>
-    <Link href="/signUp">
-      <Text className="text-blue-500">Go to SignUp</Text>
-    </Link>
-  </View>
-);
+import { SignInForm } from "@/types/type";
+import { useAuth } from "@/context/AuthContext";
 
-export default function App() {
-  const [isSplashVisible, setIsSplashVisible] = useState(true);
+const App = () => {
+  const router = useRouter();
+  const [form, setForm] = useState<SignInForm>({
+    email: "",
+    password: "",
+  });
+  const { onLogin } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsSplashVisible(false);
-    }, 3000);
+  const submit = useCallback(async () => {
+    setIsSubmitting(true);
 
-    return () => clearTimeout(timer);
-  }, []);
+    const result = await onLogin!(form.email, form.password);
+    if (result && result.error) {
+      alert(result.msg);
+    }
+
+    setIsSubmitting(false);
+  }, [form]);
 
   return (
-    <>
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
-      {isSplashVisible ? (
-        <SplashScreen onFinish={() => setIsSplashVisible(false)} />
-      ) : (
-        <MainContent />
-      )}
-    </>
+    <SafeAreaView className="bg-off-100 h-full">
+      <ScrollView>
+        <View
+          className="w-full justify-center 
+        h-full px-4 my-6"
+        >
+          <View className="flex-row justify-start mb-2 mt-10">
+            <Image
+              source={images.logo}
+              resizeMode="contain"
+              className="w-[350px] h-[70px]"
+            />
+          </View>
+          <View className="flex-row items-center mt-5">
+            <Text className="text-xl text-bold font-pbold">Log in</Text>
+          </View>
+          <FormField
+            title="Email Address"
+            value={form.email}
+            handleChangeText={(e) => setForm({ ...form, email: e })}
+            otherStyles="mt-3"
+            keyboardType="email-address"
+            placeholder="Enter your email address"
+          />
+          <FormField
+            title="Password"
+            value={form.password}
+            handleChangeText={(e) => setForm({ ...form, password: e })}
+            otherStyles="mt-7"
+            placeholder="Enter password"
+          />
+          <View className="flex-row items-center justify-between mt-3">
+            <View className="flex-row items-center">
+              <CheckBox
+                isChecked={rememberMe}
+                onClick={() => setRememberMe(!rememberMe)}
+                checkBoxColor="#59A60E"
+                uncheckedCheckBoxColor="#080807"
+              />
+              <Text className="ml-2">Remember Me</Text>
+            </View>
+            <TouchableOpacity>
+              <Text className="text-primary">Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+          <CustomButton
+            title="Log In"
+            handlePress={submit}
+            containerStyles="mt-7"
+            isLoading={isSubmitting}
+          />
+          <Text className="text-center mt-5">or Log in with</Text>
+          <View className="flex-row justify-between mt-5">
+            <TouchableOpacity className="border-2 border-primary bg-white flex-1 items-center mr-2 p-2 bg-blue-600 rounded">
+              <FontAwesome name="facebook" size={24} color="black" />
+            </TouchableOpacity>
+            <TouchableOpacity className="border-2 border-primary bg-white flex-1 items-center ml-2 p-2 bg-red-600 rounded">
+              <FontAwesome name="google" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+          <View className="flex-row justify-center items-center mt-5">
+            <Text>Don't have an account?</Text>
+            <Link className="text-primary ml-2" href="/signUp">
+              Sign Up
+            </Link>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
-}
+};
+
+export default App;

@@ -1,8 +1,35 @@
 import { StyleSheet } from "react-native";
-import React, { useEffect } from "react";
-import { SplashScreen, Stack } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
-import RootAuth from "../clerk/clerk";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import SplashScreenComponent from "../components/SplashScreen";
+
+const StackLayout = () => {
+  const { authState } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
+  useEffect(() => {
+    console.log("authState : ", authState);
+
+    const inAuthGroup = segments[0] === "(protected)";
+
+    if (!authState?.authenticated) {
+      router.replace("/"); // Redirect to sign-in or index page if not authenticated
+    } else {
+      router.replace("/(protected)/home"); // Redirect to protected home if authenticated
+    }
+  }, [authState]);
+
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="signUp" options={{ headerShown: false }} />
+      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+    </Stack>
+  );
+};
 
 const rootLayout = () => {
   const [fontsLoaded, error] = useFonts({
@@ -17,21 +44,34 @@ const rootLayout = () => {
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
 
+  const [isAppReady, setIsAppReady] = useState(false);
+
   useEffect(() => {
     if (error) {
       throw error;
     }
-    if (fontsLoaded) SplashScreen.hideAsync();
+    if (fontsLoaded) {
+      // Set app ready after a timeout to simulate loading
+      setTimeout(() => {
+        SplashScreen.hideAsync();
+        setIsAppReady(true);
+      }, 1000);
+    }
   }, [fontsLoaded, error]);
 
-  if (!fontsLoaded && !error) return null;
+  // Determine if the splash screen should still be shown
+  const isSplashVisible = !fontsLoaded || !isAppReady;
 
-  return (
-    <RootAuth>
-      <Stack>
-        <Stack.Screen name="index" />
-      </Stack>
-    </RootAuth>
+  return isSplashVisible ? (
+    <SplashScreenComponent
+      onFinish={() => setIsAppReady(true)} // Adjust if needed
+      isFontsLoaded={fontsLoaded}
+      isAppReady={isAppReady}
+    />
+  ) : (
+    <AuthProvider>
+      <StackLayout />
+    </AuthProvider>
   );
 };
 

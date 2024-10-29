@@ -10,59 +10,33 @@ import { useCallback, useState } from "react";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { useSignIn, useSignUp, useClerk } from "@clerk/clerk-expo";
-import { images } from "../../constants";
-import FormField from "../../components/FormField";
-import CustomButton from "../../components/CustomButton";
-import {
-  checkClerkUserExists,
-  checkEmailExists,
-} from "../../utils/actions/checkEmail";
-import { SignInForm } from "../../types/type";
-import { loginClerk, signupClerk } from "../../utils/actions/auth";
+import { images } from "@/constants";
+import FormField from "@/components/FormField";
+import CustomButton from "@/components/CustomButton";
+
+import { SignInForm } from "@/types/type";
+import { useAuth } from "@/context/AuthContext";
 
 const signIn = () => {
-  const { signIn, setActive, isLoaded } = useSignIn();
-  const { signUp } = useSignUp();
   const router = useRouter();
-  const { client } = useClerk();
-
   const [form, setForm] = useState<SignInForm>({
     email: "",
     password: "",
   });
+  const { onLogin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
 
   const submit = useCallback(async () => {
-    if (!isLoaded) {
-      return;
-    }
-
     setIsSubmitting(true);
 
-    try {
-      const user = await checkEmailExists(form.email, form.password);
-
-      if (!user) {
-        console.error("Invalid credentials. User not found in API.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const clerkUser = await checkClerkUserExists(form.email);
-
-      if (clerkUser) {
-        await loginClerk(signIn, setActive, form, user, router);
-      } else {
-        await signupClerk(signIn, setActive, form, user, router);
-      }
-    } catch (error) {
-      console.error("An error occurred during the submit process:", error);
-    } finally {
-      setIsSubmitting(false);
+    const result = await onLogin!(form.email, form.password);
+    if (result && result.error) {
+      alert(result.msg);
     }
-  }, [isLoaded, form, signIn, setActive, signupClerk, loginClerk, router]);
+
+    setIsSubmitting(false);
+  }, [form, signIn]);
 
   return (
     <SafeAreaView className="bg-off-100 h-full">

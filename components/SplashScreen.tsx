@@ -1,17 +1,27 @@
 import React, { useEffect } from "react";
 import { View, Image } from "react-native";
 import { images } from "../constants";
-
 import type { SplashScreenProps } from "../types/type";
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onFinish();
-    }, 3000);
+interface EnhancedSplashScreenProps extends SplashScreenProps {
+  isFontsLoaded: boolean;
+  isAppReady: boolean;
+}
 
-    return () => clearTimeout(timer);
-  }, [onFinish]);
+const SplashScreenComponent: React.FC<EnhancedSplashScreenProps> = ({
+  onFinish,
+  isFontsLoaded,
+  isAppReady,
+}) => {
+  useEffect(() => {
+    if (isFontsLoaded || isAppReady) {
+      const timer = setTimeout(() => {
+        onFinish();
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isFontsLoaded, isAppReady, onFinish]);
 
   return (
     <View className="flex-1 justify-center items-center bg-white">
@@ -24,4 +34,4 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   );
 };
 
-export default SplashScreen;
+export default SplashScreenComponent;

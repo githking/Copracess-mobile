@@ -6,10 +6,10 @@ import {
   TextInput,
 } from "react-native";
 import React, { useState } from "react";
-import BookingCalendar from "../../components/BookingCalendar";
+import BookingCalendar from "@/components/BookingCalendar";
 import { Picker } from "@react-native-picker/picker";
 import { FontAwesome } from "@expo/vector-icons";
-import BookingHistorySidebar from "../../components/BookingSideBar";
+import BookingHistorySidebar from "@/components/BookingSideBar";
 
 const dummyBookingHistory = [
   {
