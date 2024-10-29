@@ -7,8 +7,8 @@ import {
   Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import VirtualQueueHeader from "../../components/VirtualQueueHeader";
-import VirtualQueueTable from "../../components/VirtualQueueTable";
+import VirtualQueueHeader from "@/components/VirtualQueueHeader";
+import VirtualQueueTable from "@/components/VirtualQueueTable";
 
 const Queue: React.FC = () => {
   const scrollY = useRef(new Animated.Value(0)).current;

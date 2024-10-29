@@ -8,10 +8,10 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import MillCard from "../../components/MillCard";
-import ListView from "../../components/MapListView";
-import { images } from "../../constants";
-import type { Mill } from "../../types/type";
+import MillCard from "@/components/MillCard";
+import ListView from "@/components/MapListView";
+import { images } from "@/constants";
+import type { Mill } from "@/types/type";
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 

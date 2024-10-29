@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { View, SafeAreaView, ScrollView, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import PriceChart from "../../components/PriceChart";
-import BookingCalendar from "../../components/BookingCalendar";
-import SetPriceModal from "../../components/PriceModal";
-import PriceCard from "../../components/PriceCard";
+import PriceChart from "@/components/PriceChart";
+import BookingCalendar from "@/components/BookingCalendar";
+import SetPriceModal from "@/components/PriceModal";
+import PriceCard from "@/components/PriceCard";
 
 const Price = () => {
   const [selectedDate, setSelectedDate] = useState("");
