@@ -2,6 +2,7 @@ import { StyleSheet } from "react-native";
 import React, { useEffect } from "react";
 import { SplashScreen, Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
 
 const rootLayout = () => {
   const [fontsLoaded, error] = useFonts({
@@ -16,6 +17,8 @@ const rootLayout = () => {
     "Poppins-Thin": require("../assets/fonts/Poppins-Thin.ttf"),
   });
 
+  const { authState, onLogout } = useAuth();
+
   useEffect(() => {
     if (error) {
       throw error;
@@ -26,9 +29,11 @@ const rootLayout = () => {
   if (!fontsLoaded && !error) return null;
 
   return (
-    <Stack>
-      <Stack.Screen name="index" />
-    </Stack>
+    <AuthProvider>
+      <Stack>
+        <Stack.Screen name="index" />
+      </Stack>
+    </AuthProvider>
   );
 };
 

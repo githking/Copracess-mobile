@@ -15,19 +15,27 @@ import FormField from "../../components/FormField";
 import CustomButton from "../../components/CustomButton";
 
 import { SignInForm } from "../../types/type";
+import { useAuth } from "@/context/AuthContext";
 
 const signIn = () => {
   const router = useRouter();
-
   const [form, setForm] = useState<SignInForm>({
     email: "",
     password: "",
   });
+  const { onLogin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [rememberMe, setRememberMe] = useState<boolean>(false);
 
   const submit = useCallback(async () => {
     setIsSubmitting(true);
+
+    const result = await onLogin!(form.email, form.password);
+    if (result && result.error) {
+      alert(result.msg);
+    }
+
+    setIsSubmitting(false);
   }, [form, signIn]);
 
   return (
