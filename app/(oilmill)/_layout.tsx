@@ -1,16 +1,11 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Image, TouchableOpacity } from "react-native";
+import { View, Text, Image } from "react-native";
 import { Tabs, Stack, useRouter } from "expo-router";
-import { icons, images } from "../../constants";
+import { icons } from "../../constants";
 import CustomHeader from "../../components/CustomHeader";
-import ScreenHeaderBtn from "../../components/ScreenHeaderBtn";
 import { TabIconProps } from "../../types/type";
-import { useClerk } from "@clerk/clerk-expo";
-import SplashScreen from "../../components/SplashScreen";
 
 const notificationCount = 3;
 const handleNotificationPress = () => {
-  // Handle notification press
   console.log("Notification pressed");
 };
 

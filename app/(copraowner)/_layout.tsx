@@ -4,7 +4,6 @@ import { Tabs, Stack, useRouter } from "expo-router";
 import { icons } from "../../constants";
 import CustomHeader from "../../components/CustomHeader";
 import { TabIconProps } from "../../types/type";
-import { useClerk } from "@clerk/clerk-expo";
 import SplashScreen from "../../components/SplashScreen";
 
 const notificationCount = 3;
@@ -31,7 +30,6 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
 
 const TabsLayout = () => {
   const router = useRouter();
-  const { user } = useClerk();
   const [isCopraOwner, setIsCopraOwner] = useState(false);
   const [isSplashVisible, setIsSplashVisible] = useState(true);
   const [isRedirecting, setIsRedirecting] = useState(false);
@@ -40,15 +38,15 @@ const TabsLayout = () => {
     router.push("/settings");
   };
 
-  useEffect(() => {
-    if (user) {
-      const role = user.publicMetadata.role;
-      setIsCopraOwner(role === "COPRA_BUYER");
-      setIsSplashVisible(false);
-    } else {
-      setIsSplashVisible(false);
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     const role = user.publicMetadata.role;
+  //     setIsCopraOwner(role === "COPRA_BUYER");
+  //     setIsSplashVisible(false);
+  //   } else {
+  //     setIsSplashVisible(false);
+  //   }
+  // }, [user]);
 
   useEffect(() => {
     if (!isCopraOwner && !isSplashVisible && !isRedirecting) {

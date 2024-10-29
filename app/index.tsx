@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { View, Text } from "react-native";
-import { Link, Redirect, Stack } from "expo-router";
+import { Link, Stack } from "expo-router";
 import SplashScreen from "../components/SplashScreen";
-import { SignedIn, SignedOut, useUser } from "@clerk/clerk-expo";
-import { useAuth } from "@clerk/clerk-expo";
 
 const MainContent = () => (
   <View className="flex-1 justify-center items-center">
