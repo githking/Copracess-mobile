@@ -14,18 +14,18 @@ const StackLayout = () => {
     console.log("authState : ", authState);
 
     const inAuthGroup = segments[0] === "(protected)";
-    console.log(inAuthGroup);
 
     if (!authState?.authenticated) {
-      router.navigate("/");
-    } else if (authState?.authenticated === true) {
-      router.navigate("/(protected)/home");
+      router.replace("/"); // Redirect to sign-in or index page if not authenticated
+    } else {
+      router.replace("/(protected)/home"); // Redirect to protected home if authenticated
     }
   }, [authState]);
 
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="signUp" options={{ headerShown: false }} />
       <Stack.Screen name="(protected)" options={{ headerShown: false }} />
     </Stack>
   );

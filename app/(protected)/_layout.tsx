@@ -31,27 +31,17 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
 
 const TabsLayout = () => {
   const router = useRouter();
-  // const [isSplashVisible, setIsSplashVisible] = useState(true);
-  // const { authState } = useAuth();
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+  const { authState } = useAuth();
+
   const handleProfilePress = () => {
     router.push("/settings");
   };
 
-  // if (isSplashVisible) {
-  //   return (
-  //     <SplashScreenComponent
-  //       onFinish={() => setIsSplashVisible(false)}
-  //       isAppReady
-  //       isFontsLoaded
-  //     />
-  //   );
-  // }
-
-  // const isOilmill =
-  //   authState?.data.role === "OILMILL_MANAGER" ||
-  //   authState?.data.role === "OILMILL_MEMBER";
-
-  // const isCopraOwner = authState?.data.role === "COPRA_BUYER";
+  const isOilmill =
+    authState?.data.role === "OILMILL_MANAGER" ||
+    authState?.data.role === "OILMILL_MEMBER";
+  const isCopraOwner = authState?.data.role === "COPRA_BUYER";
 
   return (
     <>
@@ -115,7 +105,7 @@ const TabsLayout = () => {
         />
         <Tabs.Screen
           name="booking"
-          //redirect={!isCopraOwner}
+          redirect={!isCopraOwner}
           options={{
             title: "",
             tabBarIcon: ({ color, focused }) => (
@@ -130,7 +120,7 @@ const TabsLayout = () => {
         />
         <Tabs.Screen
           name="map"
-          //redirect={!isCopraOwner}
+          redirect={!isCopraOwner}
           options={{
             title: "",
             tabBarIcon: ({ color, focused }) => (
@@ -146,7 +136,7 @@ const TabsLayout = () => {
 
         <Tabs.Screen
           name="price"
-          //redirect={!isOilmill}
+          redirect={!isOilmill}
           options={{
             title: "",
             tabBarIcon: ({ color, focused }) => (
@@ -161,7 +151,7 @@ const TabsLayout = () => {
         />
         <Tabs.Screen
           name="queue"
-          //redirect={!isOilmill}
+          redirect={!isOilmill}
           options={{
             title: "",
             tabBarIcon: ({ color, focused }) => (
