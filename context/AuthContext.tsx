@@ -1,18 +1,21 @@
-import {
-  Children,
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
+import { jwtDecode } from "jwt-decode";
 
 interface AuthProps {
   authState?: {
     accessToken: string | null;
     refreshToken: string | null;
     authenticated: boolean | null;
+    data: {
+      id: string | null;
+      email: string | null;
+      name: string | null;
+      image?: string | null;
+      role: string | null;
+      organizationId?: string | null;
+    };
   };
   onRegister?: (email: string, password: string) => Promise<any>;
   onLogin?: (email: string, password: string) => Promise<any>;
@@ -21,6 +24,7 @@ interface AuthProps {
 
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
+const USER_DATA_KEY = "userData";
 export const API_URL = "http://192.168.0.231:3000/api/mobile";
 const AuthContext = createContext<AuthProps>({});
 
@@ -33,27 +37,49 @@ export const AuthProvider = ({ children }: any) => {
     accessToken: string | null;
     refreshToken: string | null;
     authenticated: boolean | null;
+    data: {
+      id: string | null;
+      email: string | null;
+      name: string | null;
+      image?: string | null;
+      role: string | null;
+      organizationId?: string | null;
+    };
   }>({
     accessToken: null,
     refreshToken: null,
     authenticated: null,
+    data: {
+      id: null,
+      email: null,
+      name: null,
+      image: null,
+      role: null,
+      organizationId: null,
+    },
   });
 
   useEffect(() => {
     const loadToken = async () => {
       const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
       const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      const storedUserData = await SecureStore.getItemAsync(USER_DATA_KEY);
+      const userData = storedUserData ? JSON.parse(storedUserData) : null;
+
       console.log("Stored Access:", accessToken);
+      console.log("Stored Data:", userData);
       console.log("Stored Refresh:", refreshToken);
 
       if (accessToken && refreshToken) {
         axios.defaults.headers.common[
           "Authorization"
         ] = `Bearer ${accessToken}`;
+
         setAuthState({
           accessToken,
           refreshToken,
           authenticated: true,
+          data: userData,
         });
       }
     };
@@ -74,16 +100,28 @@ export const AuthProvider = ({ children }: any) => {
       console.log("Login Result: ", response.data);
       const { accessToken, refreshToken } = response.data;
 
+      const decoded: any = jwtDecode(accessToken);
+      const userData = {
+        id: decoded.id,
+        email: decoded.email,
+        name: decoded.name,
+        image: decoded.image,
+        role: decoded.role,
+        organizationId: decoded.organizationId,
+      };
+
       setAuthState({
         accessToken,
         refreshToken,
         authenticated: true,
+        data: userData,
       });
 
       axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
       await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
       await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
+      await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(userData));
 
       return response;
     } catch (error) {
@@ -95,17 +133,30 @@ export const AuthProvider = ({ children }: any) => {
   const logout = async () => {
     await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
     await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    await SecureStore.deleteItemAsync(USER_DATA_KEY);
+
     axios.defaults.headers.common["Authorization"] = "";
 
     setAuthState({
       accessToken: null,
       refreshToken: null,
       authenticated: false,
+      data: {
+        id: null,
+        email: null,
+        name: null,
+        image: null,
+        role: null,
+        organizationId: null,
+      },
     });
+
+    return { msg: "Logout Successfully!" };
   };
 
   const refreshAccessToken = async () => {
     const oldRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+
     if (!oldRefreshToken) {
       return { error: true, msg: "No refresh token available" };
     }
@@ -140,12 +191,10 @@ export const AuthProvider = ({ children }: any) => {
       async (error) => {
         const originalRequest = error.config;
 
-        // If error is 401 and refresh token exists, try refreshing the access token
         if (error.response?.status === 401 && authState.refreshToken) {
           const newAccessToken = await refreshAccessToken();
 
           if (newAccessToken) {
-            // Retry the original request with the new token
             originalRequest.headers[
               "Authorization"
             ] = `Bearer ${newAccessToken}`;

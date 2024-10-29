@@ -10,11 +10,11 @@ import { useCallback, useState } from "react";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
-import { images } from "../../constants";
-import FormField from "../../components/FormField";
-import CustomButton from "../../components/CustomButton";
+import { images } from "@/constants";
+import FormField from "@/components/FormField";
+import CustomButton from "@/components/CustomButton";
 
-import { SignInForm } from "../../types/type";
+import { SignInForm } from "@/types/type";
 import { useAuth } from "@/context/AuthContext";
 
 const signIn = () => {
