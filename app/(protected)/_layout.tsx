@@ -4,7 +4,6 @@ import { Tabs, useRouter, Stack } from "expo-router";
 import { icons } from "@/constants";
 import CustomHeader from "@/components/CustomHeader";
 import { TabIconProps } from "@/types/type";
-import SplashScreenComponent from "@/components/SplashScreen";
 import { useAuth } from "@/context/AuthContext";
 
 const notificationCount = 3;
@@ -31,8 +30,15 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
 
 const TabsLayout = () => {
   const router = useRouter();
-  const [isSplashVisible, setIsSplashVisible] = useState(true);
   const { authState } = useAuth();
+
+  useEffect(() => {
+    if (!authState?.authenticated) {
+      router.replace("/");
+    } else {
+      router.replace("/(protected)/home");
+    }
+  }, [authState]);
 
   const handleProfilePress = () => {
     router.push("/settings");

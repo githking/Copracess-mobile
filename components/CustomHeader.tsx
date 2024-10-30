@@ -1,15 +1,10 @@
 import React from "react";
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  SafeAreaView,
-} from "react-native";
+import { View, Text, Image, TouchableOpacity } from "react-native";
 import { images, icons } from "../constants";
 import ScreenHeaderBtn from "./ScreenHeaderBtn";
 
 import type { CustomHeaderProps } from "../types/type";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CustomHeader: React.FC<CustomHeaderProps> = ({
   notificationCount,
@@ -18,7 +13,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
 }) => {
   return (
     <SafeAreaView>
-      <View className="flex-row justify-between items-center w-full px-4 mt-8">
+      <View className="flex-row justify-between items-center w-full px-4 mt-8 bg-red">
         <View className="flex-row items-center">
           <ScreenHeaderBtn
             iconUrl={images.logo}
