@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import SplashScreenComponent from "../components/SplashScreen";
+import SplashScreenComponent from "@/components/SplashScreen";
 
 const StackLayout = () => {
   const { authState } = useAuth();
@@ -15,18 +15,18 @@ const StackLayout = () => {
 
     const inAuthGroup = segments[0] === "(protected)";
 
-    if (!authState?.authenticated) {
-      router.replace("/"); // Redirect to sign-in or index page if not authenticated
+    if (!authState?.authenticated && inAuthGroup) {
+      router.replace("/");
     } else {
-      router.replace("/(protected)/home"); // Redirect to protected home if authenticated
+      router.replace("/(protected)/home");
     }
   }, [authState]);
 
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="signIn" options={{ headerShown: false }} />
       <Stack.Screen name="signUp" options={{ headerShown: false }} />
-      <Stack.Screen name="(protected)" options={{ headerShown: false }} />
+      <Stack.Screen name="(protected)" options={{ headerShown: true }} />
     </Stack>
   );
 };
@@ -51,7 +51,6 @@ const rootLayout = () => {
       throw error;
     }
     if (fontsLoaded) {
-      // Set app ready after a timeout to simulate loading
       setTimeout(() => {
         SplashScreen.hideAsync();
         setIsAppReady(true);
@@ -59,7 +58,6 @@ const rootLayout = () => {
     }
   }, [fontsLoaded, error]);
 
-  // Determine if the splash screen should still be shown
   const isSplashVisible = !fontsLoaded || !isAppReady;
 
   return isSplashVisible ? (
