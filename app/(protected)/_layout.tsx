@@ -34,7 +34,7 @@ const TabsLayout = () => {
 
   useEffect(() => {
     if (!authState?.authenticated) {
-      router.replace("/");
+      router.replace("/signIn");
     } else {
       router.replace("/(protected)/home");
     }

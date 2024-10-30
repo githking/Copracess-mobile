@@ -27,7 +27,7 @@ const SettingsPage = () => {
         setIsLogoutModalVisible(false);
         await onLogout();
 
-        router.replace("/");
+        router.replace("/signIn");
       } catch (error) {
         console.error("Error signing out:", error);
       }
