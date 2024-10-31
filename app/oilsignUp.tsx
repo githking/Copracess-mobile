@@ -3,13 +3,14 @@ import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
 import { useState } from "react";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { images } from "@/constants";
 import FormField from "@/components/FormField";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 
-const signUp = () => {
+const oilsignUp = () => {
+  const router = useRouter();
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -28,15 +29,18 @@ const signUp = () => {
     <SafeAreaView className="bg-off-100 h-full">
       <ScrollView className="flex-grow-1">
         <View className="w-full justify-center h-full px-4 py-2">
-          <View className="flex-row justify-start mb-2 mt-10">
+          <View className="flex-row items-center mb-2 mt-10">
+            <TouchableOpacity onPress={() => router.back()} className="mr-4">
+              <FontAwesome name="angle-left" size={30} color="#59A60E" />
+            </TouchableOpacity>
             <Image
               source={images.logo}
               resizeMode="contain"
-              className="w-[350px] h-[70px] mt-0"
+              className="w-[300px] h-[70px]"
             />
           </View>
           <Text className="text-xl text-bold font-psemibold">
-            Create Account
+            Create Oil Mill Account
           </Text>
           <ProgressSteps
             completedProgressBarColor="#59A60E"
@@ -165,16 +169,7 @@ const signUp = () => {
                   />
                   <View className="flex-row justify-between mt-2 w-full mb-5">
                     <View className="flex-1 mr-2">
-                      <Text className="mb-1 font-bold">PCA Permit</Text>
-                      <TouchableOpacity className="border border-gray-100 bg-white p-4 rounded-lg items-center">
-                        <FontAwesome name="upload" size={15} color="#59A60E" />
-                        <Text className="text-gray-100 font-psemibold">
-                          Upload File
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View className="flex-1 ml-2">
-                      <Text className="mb-1 font-bold">Mayor's Permit</Text>
+                      <Text className="mb-1 font-bold">Business Permit</Text>
                       <TouchableOpacity className="border border-gray-100 bg-white p-4 rounded-lg items-center">
                         <FontAwesome name="upload" size={15} color="#59A60E" />
                         <Text className="text-gray-100 font-psemibold">
@@ -257,7 +252,7 @@ const signUp = () => {
           </ProgressSteps>
           <View className="flex-row justify-center items-center mt-5 mb-10">
             <Text>Already Have an Account?</Text>
-            <Link className="text-primary ml-2" href="/">
+            <Link className="text-primary ml-2" href="/signIn">
               Login
             </Link>
           </View>
@@ -267,4 +262,4 @@ const signUp = () => {
   );
 };
 
-export default signUp;
+export default oilsignUp;

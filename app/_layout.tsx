@@ -25,7 +25,9 @@ const StackLayout = () => {
   return (
     <Stack>
       <Stack.Screen name="signIn" options={{ headerShown: false }} />
-      <Stack.Screen name="signUp" options={{ headerShown: false }} />
+      <Stack.Screen name="roleSelect" options={{ headerShown: false }} />
+      <Stack.Screen name="oilsignUp" options={{ headerShown: false }} />
+      <Stack.Screen name="buyersignUp" options={{ headerShown: false }} />
       <Stack.Screen name="(protected)" options={{ headerShown: true }} />
     </Stack>
   );
@@ -62,7 +64,7 @@ const rootLayout = () => {
 
   return isSplashVisible ? (
     <SplashScreenComponent
-      onFinish={() => setIsAppReady(true)} // Adjust if needed
+      onFinish={() => setIsAppReady(true)}
       isFontsLoaded={fontsLoaded}
       isAppReady={isAppReady}
     />

@@ -90,18 +90,28 @@ const App = () => {
             containerStyles="mt-7"
             isLoading={isSubmitting}
           />
-          <Text className="text-center mt-5">or Log in with</Text>
-          <View className="flex-row justify-between mt-5">
-            <TouchableOpacity className="border-2 border-primary bg-white flex-1 items-center mr-2 p-2 bg-blue-600 rounded">
-              <FontAwesome name="facebook" size={24} color="black" />
+          <View className="flex-row items-center my-6">
+            <View className="flex-1 h-[1px] bg-gray-100" />
+            <Text className="mx-4 text-gray-100 font-pmedium">
+              or Continue with
+            </Text>
+            <View className="flex-1 h-[1px] bg-gray-100" />
+          </View>
+
+          <View className="space-y-4">
+            <TouchableOpacity className="w-full bg-white border border-gray-100 rounded-lg py-3 flex-row justify-center items-center">
+              <FontAwesome name="google" size={20} color="#DB4437" />
+              <Text className="font-pmedium ml-2">Continue with Google</Text>
             </TouchableOpacity>
-            <TouchableOpacity className="border-2 border-primary bg-white flex-1 items-center ml-2 p-2 bg-red-600 rounded">
-              <FontAwesome name="google" size={24} color="black" />
+
+            <TouchableOpacity className="w-full bg-white border border-gray-100 rounded-lg py-3 flex-row justify-center items-center">
+              <FontAwesome name="facebook" size={20} color="#4267B2" />
+              <Text className="font-pmedium ml-2">Continue with Facebook</Text>
             </TouchableOpacity>
           </View>
           <View className="flex-row justify-center items-center mt-5">
             <Text>Don't have an account?</Text>
-            <Link className="text-primary ml-2" href="/signUp">
+            <Link className="text-primary ml-2" href="/roleSelect">
               Sign Up
             </Link>
           </View>

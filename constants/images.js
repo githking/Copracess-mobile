@@ -8,6 +8,8 @@ import empty from "../assets/images/empty-box.png";
 import LogoSplash from "../assets/images/LogoSplash.png";
 import maps from "../assets/images/maps.png";
 import oilmill from "../assets/images/oilmill.jpg";
+import selectmill from "../assets/images/selectmill.png";
+import selectbuyer from "../assets/images/selectbuyer.png";
 
 export default {
   profile,
@@ -20,4 +22,6 @@ export default {
   LogoSplash,
   maps,
   oilmill,
+  selectmill,
+  selectbuyer,
 };
