@@ -257,7 +257,7 @@ const signUp = () => {
           </ProgressSteps>
           <View className="flex-row justify-center items-center mt-5 mb-10">
             <Text>Already Have an Account?</Text>
-            <Link className="text-primary ml-2" href="/">
+            <Link className="text-primary ml-2" href="/signIn">
               Login
             </Link>
           </View>

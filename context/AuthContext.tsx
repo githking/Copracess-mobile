@@ -25,7 +25,7 @@ interface AuthProps {
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 const USER_DATA_KEY = "userData";
-export const API_URL = "http://192.168.0.231:3000/api/mobile";
+// export const API_URL = "http://192.168.0.231:3000/api/mobile";
 const AuthContext = createContext<AuthProps>({});
 
 export const useAuth = () => {
@@ -33,6 +33,8 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: any) => {
+  axios.defaults.baseURL = "http://192.168.0.231:3000/api/mobile";
+
   const [authState, setAuthState] = useState<{
     accessToken: string | null;
     refreshToken: string | null;
@@ -88,7 +90,7 @@ export const AuthProvider = ({ children }: any) => {
 
   const register = async (email: string, password: string) => {
     try {
-      return await axios.post(`${API_URL}/auth`, { email, password });
+      return await axios.post(`/auth`, { email, password });
     } catch (error) {
       return { error: true, msg: (error as any).response.data.msg };
     }
@@ -96,7 +98,7 @@ export const AuthProvider = ({ children }: any) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await axios.post(`${API_URL}/auth`, { email, password });
+      const response = await axios.post(`/auth`, { email, password });
       console.log("Login Result: ", response.data);
       const { accessToken, refreshToken } = response.data;
 
@@ -162,7 +164,7 @@ export const AuthProvider = ({ children }: any) => {
     }
 
     try {
-      const response = await axios.post(`${API_URL}/auth/refresh`, {
+      const response = await axios.post(`/auth/refresh`, {
         token: oldRefreshToken,
       });
       const { accessToken, refreshToken } = response.data;
