@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { images } from "@/constants";
 import { icons } from "@/constants";
 import TransactionCard from "@/components/transactionCard";
@@ -17,48 +17,78 @@ import UpdateTransactionModal from "@/components/UpdateTransactionModal";
 import SearchInput from "@/components/SearchInput";
 import FilterModal from "@/components/FilterModal";
 import type { Filters, Transaction } from "@/types/type";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
 
-const transactions = [
-  {
-    transaction_id: "1",
-    transaction_date_time: "2024-08-12 05:19:20",
-    buyer_name: "Hakim Saricala",
-    transaction_amount: "140000.00",
-    plate_number: "ABC123",
-    copra_weight: 8,
-    payment_method: "Bank",
-    status: "Paid",
-  },
-  {
-    transaction_id: "2",
-    transaction_date_time: "2024-08-12 05:19:20",
-    buyer_name: "King Baltazar",
-    transaction_amount: "24000.00",
-    plate_number: "JAB789",
-    copra_weight: 2,
-    payment_method: "Cash",
-    status: "Pending",
-  },
-  {
-    transaction_id: "3",
-    transaction_date_time: "2024-09-12 05:19:20",
-    buyer_name: "Lester David",
-    transaction_amount: "170000.00",
-    plate_number: "KYU119",
-    copra_weight: 10,
-    payment_method: "Cheque",
-    status: "Paid",
-  },
-];
+// const transactions = [
+//   {
+//     transaction_id: "1",
+//     transaction_date_time: "2024-08-12 05:19:20",
+//     buyer_name: "Hakim Saricala",
+//     transaction_amount: "140000.00",
+//     plate_number: "ABC123",
+//     copra_weight: 8,
+//     payment_method: "Bank",
+//     status: "Paid",
+//   },
+//   {
+//     transaction_id: "2",
+//     transaction_date_time: "2024-08-12 05:19:20",
+//     buyer_name: "King Baltazar",
+//     transaction_amount: "24000.00",
+//     plate_number: "JAB789",
+//     copra_weight: 2,
+//     payment_method: "Cash",
+//     status: "Pending",
+//   },
+//   {
+//     transaction_id: "3",
+//     transaction_date_time: "2024-09-12 05:19:20",
+//     buyer_name: "Lester David",
+//     transaction_amount: "170000.00",
+//     plate_number: "KYU119",
+//     copra_weight: 10,
+//     payment_method: "Cheque",
+//     status: "Paid",
+//   },
+// ];
 
 const transaction = () => {
-  const [loading, setLoading] = useState(false);
+  const { authState } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
+
+  const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!authState?.accessToken) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await axios.get("/transactions", {
+          headers: {
+            Authorization: `Bearer ${authState.accessToken}`,
+          },
+        });
+        setTransactions(response.data.transactions);
+        setLoading(false);
+        console.log(response.data.transactions);
+      } catch (err: any) {
+        setLoading(false);
+        console.log(err.message);
+      }
+    };
+
+    fetchTransactions();
+  }, [authState?.accessToken]);
 
   const handleFABPress = () => {
     setIsModalVisible(true);
@@ -172,6 +202,7 @@ const transaction = () => {
           </>
         )}
       />
+
       <AddFab onPress={handleFABPress} />
       <AddTransactionModal
         visible={isModalVisible}
