@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image } from "react-native";
+import { View, Text, Image, ActivityIndicator } from "react-native";
 import { Tabs, useRouter, Stack } from "expo-router";
-import { icons } from "@/constants";
 import CustomHeader from "@/components/CustomHeader";
 import { TabIconProps } from "@/types/type";
 import { useAuth } from "@/context/AuthContext";
+import Routes from "@/constants/tabRoutes";
 
 const notificationCount = 3;
 const handleNotificationPress = () => {
@@ -31,23 +31,35 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
 const TabsLayout = () => {
   const router = useRouter();
   const { authState } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!authState?.authenticated) {
       router.replace("/signIn");
-    } else {
-      router.replace("/(protected)/home");
+    } else if (authState?.data?.role) {
+      setLoading(false);
     }
-  }, [authState]);
+  }, [authState?.authenticated, authState?.data?.role]);
 
   const handleProfilePress = () => {
     router.push("/settings");
   };
 
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#59A60E" />
+      </View>
+    );
+  }
+
+  // Determine roles after authState is loaded
   const isOilmill =
-    authState?.data.role === "OILMILL_MANAGER" ||
-    authState?.data.role === "OILMILL_MEMBER";
-  const isCopraOwner = authState?.data.role === "COPRA_BUYER";
+    authState?.data?.role === "OIL_MILL_MEMBER" ||
+    authState?.data?.role === "OIL_MILL_MANAGER";
+  const isCopraOwner = authState?.data?.role === "COPRA_BUYER";
+
+  const tabScreens = Routes(isOilmill, isCopraOwner);
 
   return (
     <>
@@ -81,102 +93,24 @@ const TabsLayout = () => {
           headerShown: false,
         }}
       >
-        <Tabs.Screen
-          name="home"
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.window}
-                color={color}
-                name="Home"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="transaction"
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.records}
-                color={color}
-                name="Transaction"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="booking"
-          redirect={!isCopraOwner}
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.booking}
-                color={color}
-                name="Booking"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="map"
-          redirect={!isCopraOwner}
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.millmap}
-                color={color}
-                name="Map"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
-          name="price"
-          redirect={!isOilmill}
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.price}
-                color={color}
-                name="Price"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="queue"
-          redirect={!isOilmill}
-          options={{
-            title: "",
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                icon={icons.queue}
-                color={color}
-                name="Queue"
-                focused={focused}
-              />
-            ),
-          }}
-        />
-
-        <Tabs.Screen
-          name="settings"
-          options={{
-            href: null,
-          }}
-        />
+        {tabScreens.map((screen) => (
+          <Tabs.Screen
+            key={screen.name}
+            name={screen.name}
+            options={{
+              title: "",
+              tabBarIcon: ({ color, focused }) => (
+                <TabIcon
+                  icon={screen.icon}
+                  color={color}
+                  name={screen.label}
+                  focused={focused}
+                />
+              ),
+              href: screen.href,
+            }}
+          />
+        ))}
       </Tabs>
     </>
   );

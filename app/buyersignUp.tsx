@@ -1,21 +1,54 @@
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, useRouter } from "expo-router";
 import { images } from "@/constants";
 import FormField from "@/components/FormField";
 import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import CustomButton from "@/components/CustomButton";
 
 const buyerSignUp = () => {
   const router = useRouter();
   const [form, setForm] = useState({
-    fullName: "",
+    name: "",
     email: "",
     password: "",
+    role: "COPRA_BUYER",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", form);
+  const handleSubmit = async () => {
+    setErrorMessage("");
+    if (!form.name || !form.email || !form.password) {
+      setErrorMessage("Please fill in all fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post("/register", form);
+      console.log("Registration successful:", response.data);
+      Alert.alert(
+        "Success",
+        "Registration successful! Please check your email for activation."
+      );
+    } catch (error) {
+      console.error("Registration error:", error);
+      setErrorMessage("Registration failed. Please try again.");
+      Alert.alert("Error", "Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -40,8 +73,8 @@ const buyerSignUp = () => {
           <View className="items-center mb-6">
             <FormField
               title="Full name"
-              value={form.fullName}
-              handleChangeText={(e) => setForm({ ...form, fullName: e })}
+              value={form.name}
+              handleChangeText={(e) => setForm({ ...form, name: e })}
               otherStyles="mb-4"
               keyboardType="default"
               placeholder="Enter your name"
@@ -65,14 +98,12 @@ const buyerSignUp = () => {
             />
           </View>
 
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className="bg-primary rounded-lg py-4 mb-6"
-          >
-            <Text className="text-white font-psemibold text-center">
-              Register
-            </Text>
-          </TouchableOpacity>
+          <CustomButton
+            title="Register"
+            handlePress={handleSubmit}
+            containerStyles="py-4 mb-6"
+            isLoading={isSubmitting}
+          />
 
           <View className="flex-row items-center mb-6">
             <View className="flex-1 h-[1px] bg-gray-100" />

@@ -17,7 +17,7 @@ interface AuthProps {
       organizationId?: string | null;
     };
   };
-  onRegister?: (email: string, password: string) => Promise<any>;
+  // onRegister?: (email: string, password: string) => Promise<any>;
   onLogin?: (email: string, password: string) => Promise<any>;
   onLogout?: () => Promise<any>;
 }
@@ -33,7 +33,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: any) => {
-  axios.defaults.baseURL = "http://192.168.0.231:3000/api/mobile";
+  axios.defaults.baseURL = "http://192.168.1.200:3000/api/mobile";
 
   const [authState, setAuthState] = useState<{
     accessToken: string | null;
@@ -88,13 +88,13 @@ export const AuthProvider = ({ children }: any) => {
     loadToken();
   }, []);
 
-  const register = async (email: string, password: string) => {
-    try {
-      return await axios.post(`/auth`, { email, password });
-    } catch (error) {
-      return { error: true, msg: (error as any).response.data.msg };
-    }
-  };
+  // const register = async (email: string, password: string) => {
+  //   try {
+  //     return await axios.post(`/auth`, { email, password });
+  //   } catch (error) {
+  //     return { error: true, msg: (error as any).response.data.msg };
+  //   }
+  // };
 
   const login = async (email: string, password: string) => {
     try {
@@ -214,7 +214,7 @@ export const AuthProvider = ({ children }: any) => {
   }, [authState.refreshToken]);
 
   const value = {
-    onRegister: register,
+    // onRegister: register,
     onLogin: login,
     onLogout: logout,
     authState,
