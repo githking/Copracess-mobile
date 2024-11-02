@@ -33,7 +33,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: any) => {
-  axios.defaults.baseURL = "http://192.168.0.231:3000/api/mobile";
+  axios.defaults.baseURL = "http://192.168.1.200:3000/api/mobile";
 
   const [authState, setAuthState] = useState<{
     accessToken: string | null;
