@@ -141,10 +141,9 @@ const transaction = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-off-100">
+    <View className="flex-1 bg-off-100">
       <FlatList
         data={transactions}
-        className="p-4"
         keyExtractor={(item) => item.transaction_id}
         renderItem={({ item }) => (
           <TransactionCard
@@ -153,8 +152,8 @@ const transaction = () => {
             onPress={() => handleTransactionPress(item)}
           />
         )}
+        className="px-4 pb-24"
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingBottom: 100 }}
         ListEmptyComponent={() => (
           <View className="flex flex-col items-center justify-center">
             {!loading ? (
@@ -173,18 +172,18 @@ const transaction = () => {
           </View>
         )}
         ListHeaderComponent={() => (
-          <>
+          <View className="pt-4">
             <View className="flex flex-row items-center space-x-2 w-full">
               <View className="flex-1 flex-row items-center">
                 <SearchInput icon={icons.search} handlePress={() => {}} />
               </View>
               <TouchableOpacity
-                className="p-2 border border-primary bg-white rounded-md"
+                className="p-1.5 border border-primary bg-white rounded-md"
                 onPress={handleOpenFilterModal}
               >
                 <Image
                   source={icons.filter}
-                  className="w-10 h-10"
+                  className="w-7 h-7"
                   style={{ tintColor: "#59A60E" }}
                 />
               </TouchableOpacity>
@@ -199,7 +198,7 @@ const transaction = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </>
+          </View>
         )}
       />
 
@@ -219,7 +218,7 @@ const transaction = () => {
         onClose={handleCloseFilterModal}
         onApplyFilters={handleApplyFilters}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

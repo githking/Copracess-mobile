@@ -18,9 +18,9 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [query, setQuery] = useState(initialQuery);
 
   return (
-    <View className="flex flex-row items-center space-x-4 w-full h-16 px-4 bg-white rounded-2xl border border-primary focus:border-secondary mt-0">
+    <View className="flex flex-row items-center space-x-2 w-full h-12 px-3 bg-white rounded-lg border border-primary focus:border-secondary">
       <TextInput
-        className="text-base mt-0.5 text-black flex-1 font-pregular"
+        className="text-sm text-black flex-1 font-pregular"
         value={query}
         placeholder="Search Record"
         placeholderTextColor="#CDCDE0"
@@ -37,7 +37,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       >
         <Image
           source={icon}
-          style={{ width: 20, height: 20, tintColor: "#59A60E" }}
+          style={{ width: 16, height: 16, tintColor: "#59A60E" }}
         />
       </TouchableOpacity>
     </View>

@@ -168,6 +168,75 @@ export interface ListViewProps {
   onSwitchView: () => void;
 }
 
+export interface SummaryItem {
+  label: string;
+  value: string | number;
+  unit?: string;
+}
+
+export interface SummaryCardProps {
+  title: string;
+  items: SummaryItem[];
+  titleClassName?: string;
+  containerClassName?: string;
+}
+
+export interface QueueItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  status: string;
+  statusColor?: "primary" | "secondary";
+  icon?: keyof typeof MaterialIcons.glyphMap;
+}
+
+export interface QueueSectionProps {
+  title: string;
+  seeAllText?: string;
+  data: QueueItem[];
+  onSeeAllPress?: () => void;
+  containerClassName?: string;
+  emptyStateText?: string;
+  showAvatar?: boolean;
+  onItemPress?: (item: QueueItem) => void;
+}
+
+export interface TabOption {
+  key: string;
+  label: string;
+}
+
+export interface ChartData {
+  labels: string[];
+  datasets: { data: number[] }[];
+}
+
+export interface SummaryItem {
+  label: string;
+  value: string;
+}
+
+export interface ChartSectionProps {
+  tabs: TabOption[];
+  chartData: Record<string, ChartData>;
+  summaryData: Record<string, SummaryItem[]>;
+  chartConfig?: any;
+  containerClassName?: string;
+  height?: number;
+}
+export interface PriceCardItem {
+  id: string;
+  millName: string;
+  price: string;
+  subPrice: string;
+}
+
+export interface PriceSectionProps {
+  data: PriceCardItem[];
+  average: string;
+  onViewAll?: () => void;
+}
+
 export interface TokenCache {
   getToken: (key: string) => Promise<string | undefined | null>;
   saveToken: (key: string, token: string) => Promise<void>;
