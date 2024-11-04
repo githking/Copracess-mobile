@@ -2,11 +2,18 @@ import { icons } from "@/constants";
 
 const Routes = (isOilmill: boolean, isCopraOwner: boolean) => [
   {
-    name: "home",
+    name: "oilhome",
     icon: icons.window,
     label: "Home",
     visible: true,
-    href: "/home",
+    href: isOilmill ? "/oilhome" : null,
+  },
+  {
+    name: "buyerhome",
+    icon: icons.window,
+    label: "Home",
+    visible: true,
+    href: isCopraOwner ? "/buyerhome" : null,
   },
   {
     name: "transaction",

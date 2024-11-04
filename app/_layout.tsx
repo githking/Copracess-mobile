@@ -17,8 +17,10 @@ const StackLayout = () => {
 
     if (!authState?.authenticated && inAuthGroup) {
       router.replace("/");
+    } else if (authState?.data.role === "COPRA_BUYER") {
+      router.replace("/(protected)/buyerhome");
     } else {
-      router.replace("/(protected)/home");
+      router.replace("/(protected)/oilhome");
     }
   }, [authState]);
 
