@@ -9,6 +9,8 @@ import FormField from "@/components/FormField";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import cld from "@/lib/cloudinary";
+import { AdvancedImage } from "cloudinary-react-native";
 
 const oilsignUp = () => {
   const router = useRouter();
@@ -27,6 +29,8 @@ const oilsignUp = () => {
   });
   const [agree, setAgree] = useState(false);
   const [permitImage, setPermitImage] = useState<string | null>(null);
+
+  const myImage = cld.image("sample");
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -198,12 +202,18 @@ const oilsignUp = () => {
                         </Text>
                       </TouchableOpacity>
                     </View>
+
                     {permitImage ? (
                       <Image
                         source={{ uri: permitImage }}
                         className="w-52 aspect-[3/4] rounded-lg bg-slate-300"
                       />
-                    ) : null}
+                    ) : (
+                      <AdvancedImage
+                        cldImg={myImage}
+                        className="w-52 aspect-[3/4] rounded-lg bg-slate-300"
+                      />
+                    )}
                   </View>
                 </View>
               </View>
