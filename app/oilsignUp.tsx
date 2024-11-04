@@ -59,7 +59,7 @@ const oilsignUp = () => {
 
   const uploadImage = async (): Promise<UploadImageResponse> => {
     if (!permitImage) {
-      return null; // Return null if no image is set
+      return null;
     }
 
     const options = {
@@ -73,11 +73,11 @@ const oilsignUp = () => {
         options: options,
         callback: (error: any, response: any) => {
           if (error) {
-            console.error("Upload error:", error); // Optional: log the error
-            resolve(null); // Resolve with null if there's an error
+            console.error("Upload error:", error);
+            resolve(null);
           } else if (response) {
             console.log(response);
-            resolve(response.url); // Resolve with the URL if upload is successful
+            resolve(response.url);
           }
         },
       });
