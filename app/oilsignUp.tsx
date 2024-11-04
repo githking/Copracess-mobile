@@ -1,4 +1,11 @@
-import { View, Text, ScrollView, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Image,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
 
 import { useState } from "react";
 import { ProgressSteps, ProgressStep } from "react-native-progress-steps";
@@ -10,7 +17,9 @@ import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import cld from "@/lib/cloudinary";
-import { AdvancedImage } from "cloudinary-react-native";
+import axios from "axios";
+
+import { upload } from "cloudinary-react-native";
 
 const oilsignUp = () => {
   const router = useRouter();
@@ -25,12 +34,13 @@ const oilsignUp = () => {
     position: "",
     address: "",
     phone: "",
+    permitUrl: "",
     role: "OIL_MILL_MANAGER",
   });
   const [agree, setAgree] = useState(false);
   const [permitImage, setPermitImage] = useState<string | null>(null);
-
-  const myImage = cld.image("sample");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -40,10 +50,104 @@ const oilsignUp = () => {
       quality: 1,
     });
 
-    console.log(result);
-
     if (!result.canceled) {
       setPermitImage(result.assets[0].uri);
+    }
+  };
+
+  type UploadImageResponse = string | null;
+
+  const uploadImage = async (): Promise<UploadImageResponse> => {
+    if (!permitImage) {
+      return null; // Return null if no image is set
+    }
+
+    const options = {
+      upload_preset: "copracess",
+      unsigned: true,
+    };
+
+    return new Promise((resolve) => {
+      upload(cld, {
+        file: permitImage,
+        options: options,
+        callback: (error: any, response: any) => {
+          if (error) {
+            console.error("Upload error:", error); // Optional: log the error
+            resolve(null); // Resolve with null if there's an error
+          } else if (response) {
+            console.log(response);
+            resolve(response.url); // Resolve with the URL if upload is successful
+          }
+        },
+      });
+    });
+  };
+
+  const handleSubmit = async () => {
+    setErrorMessage("");
+
+    if (
+      !form.firstname ||
+      !form.middlename ||
+      !form.lastname ||
+      !form.businessname ||
+      !form.position ||
+      !form.address ||
+      !form.phone ||
+      !form.email ||
+      !form.password ||
+      !form.username
+    ) {
+      Alert.alert("error", "Please fill in all fields.");
+      return;
+    }
+
+    if (permitImage === null) {
+      Alert.alert(
+        "Please fill in all fields.",
+        "Please add a business permit."
+      );
+      return;
+    }
+
+    if (!agree) {
+      Alert.alert(
+        "Please fill in all fields.",
+        "Please agree the terms and conditions."
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const permitUrl = await uploadImage();
+    if (permitUrl === null) {
+      Alert.alert("Error", "Failed to upload business permit.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const updatedForm = {
+      ...form,
+      permitUrl: permitUrl,
+    };
+
+    console.log("Updated form :", updatedForm);
+
+    try {
+      const response = await axios.post("/register", updatedForm);
+      console.log("Registration successful:", response.data);
+      Alert.alert(
+        "Success",
+        "Registration successful! Please check your email for activation."
+      );
+    } catch (error) {
+      console.error("Registration error:", error);
+      setErrorMessage("Registration failed. Please try again.");
+      Alert.alert("Error", "Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -131,6 +235,7 @@ const oilsignUp = () => {
                 />
               </View>
             </ProgressStep>
+
             <ProgressStep
               nextBtnStyle={{
                 backgroundColor: "#59A60E",
@@ -208,16 +313,12 @@ const oilsignUp = () => {
                         source={{ uri: permitImage }}
                         className="w-52 aspect-[3/4] rounded-lg bg-slate-300"
                       />
-                    ) : (
-                      <AdvancedImage
-                        cldImg={myImage}
-                        className="w-52 aspect-[3/4] rounded-lg bg-slate-300"
-                      />
-                    )}
+                    ) : null}
                   </View>
                 </View>
               </View>
             </ProgressStep>
+
             <ProgressStep
               nextBtnStyle={{
                 backgroundColor: "#59A60E",
@@ -248,6 +349,9 @@ const oilsignUp = () => {
                 fontWeight: "bold",
               }}
               label="Login Info"
+              onSubmit={handleSubmit}
+              nextBtnDisabled={isSubmitting}
+              previousBtnDisabled={isSubmitting}
             >
               <View className="items-center mb-4">
                 <FormField
