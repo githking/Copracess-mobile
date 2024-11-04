@@ -10,42 +10,52 @@ const VirtualQueueHeader: React.FC<VirtualQueueHeaderProps> = ({
   onTheWay,
 }) => {
   return (
-    <View className="bg-primary rounded-lg p-4 mb-4">
-      <View className="flex-row justify-between items-start mb-2">
-        <View>
-          <Text className="text-white font-pbold text-lg">VIRTUAL QUEUE</Text>
-          <Text className="text-white font-pbold text-lg">#{queueNumber}</Text>
-        </View>
-        <TouchableOpacity>
-          <Text className="text-white font-pmedium text-xs">VIEW QR CODE</Text>
+    <View className="bg-primary rounded-lg p-3 mb-2">
+      <View className="flex-row justify-between items-center mb-2">
+        <Text className="text-white text-xs font-psemibold uppercase">
+          Virtual Queue #{queueNumber}
+        </Text>
+        <TouchableOpacity className="bg-white rounded-xl p-1">
+          <Text className="text-primary text-xs font-pregular">
+            VIEW QR CODE
+          </Text>
         </TouchableOpacity>
       </View>
-      <View className="flex-row justify-between mt-2">
-        <View className="border-r border-white pr-2 flex-1">
-          <Text className="text-white font-pmedium text-xs">CURRENTLY</Text>
-          <Text className="text-white font-pmedium text-xs">UNLOADING</Text>
-          <Text className="text-white font-pbold text-xl mt-1">
+      <View className="flex-row items-center">
+        <View className="flex-1 border-r border-white/20">
+          <Text className="text-white/80 text-[10px] uppercase font-pmedium">
+            Currently Unloading
+          </Text>
+          <Text className="text-white text-base font-pbold mt-1">
             #{currentlyUnloading}
           </Text>
         </View>
-        <View className="border-r border-white px-2 flex-1">
-          <Text className="text-white font-pmedium text-xs">TOTAL</Text>
-          <Text className="text-white font-pmedium text-xs">TRUCKS</Text>
-          <Text className="text-white font-pbold text-xl mt-1">
-            {totalTrucks} tons
+
+        <View className="flex-1 border-r border-white/20 pl-3">
+          <Text className="text-white/80 text-[10px] uppercase font-pmedium">
+            Total Trucks
+          </Text>
+          <Text className="text-white text-base font-pbold mt-1">
+            {totalTrucks}
           </Text>
         </View>
-        <View className="border-r border-white px-2 flex-1">
-          <Text className="text-white font-pmedium text-xs">COMPLETED</Text>
-          <Text className="text-white font-pmedium text-xs">&nbsp;</Text>
-          <Text className="text-white font-pbold text-xl mt-1">
+
+        <View className="flex-1 border-r border-white/20 pl-3">
+          <Text className="text-white/80 text-[10px] uppercase font-pmedium">
+            Completed
+          </Text>
+          <Text className="text-white text-base font-pbold mt-1">
             {completed}
           </Text>
         </View>
-        <View className="pl-2 flex-1">
-          <Text className="text-white font-pmedium text-xs">ON THE</Text>
-          <Text className="text-white font-pmedium text-xs">WAY</Text>
-          <Text className="text-white font-pbold text-xl mt-1">{onTheWay}</Text>
+
+        <View className="flex-1 pl-3">
+          <Text className="text-white/80 text-[10px] uppercase font-pmedium">
+            On The Way
+          </Text>
+          <Text className="text-white text-base font-pbold mt-1">
+            {onTheWay}
+          </Text>
         </View>
       </View>
     </View>

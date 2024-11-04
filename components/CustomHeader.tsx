@@ -2,18 +2,19 @@ import React from "react";
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { images, icons } from "../constants";
 import ScreenHeaderBtn from "./ScreenHeaderBtn";
-
 import type { CustomHeaderProps } from "../types/type";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomHeader: React.FC<CustomHeaderProps> = ({
   notificationCount,
   onNotificationPress,
   onProfilePress,
 }) => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView>
-      <View className="flex-row justify-between items-center w-full px-4 mt-8 bg-red">
+    <View style={{ paddingTop: insets.top }} className="bg-white w-full">
+      <View className="flex-row justify-between items-center px-4 py-2">
         <View className="flex-row items-center">
           <ScreenHeaderBtn
             iconUrl={images.logo}
@@ -47,7 +48,7 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
