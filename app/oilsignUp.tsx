@@ -8,6 +8,7 @@ import { images } from "@/constants";
 import FormField from "@/components/FormField";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 
 const oilsignUp = () => {
   const router = useRouter();
@@ -22,8 +23,25 @@ const oilsignUp = () => {
     position: "",
     address: "",
     phone: "",
+    role: "OIL_MILL_MANAGER",
   });
   const [agree, setAgree] = useState(false);
+  const [permitImage, setPermitImage] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setPermitImage(result.assets[0].uri);
+    }
+  };
 
   return (
     <SafeAreaView className="bg-off-100 h-full">
@@ -170,13 +188,22 @@ const oilsignUp = () => {
                   <View className="flex-row justify-between mt-2 w-full mb-5">
                     <View className="flex-1 mr-2">
                       <Text className="mb-1 font-bold">Business Permit</Text>
-                      <TouchableOpacity className="border border-gray-100 bg-white p-4 rounded-lg items-center">
+                      <TouchableOpacity
+                        onPress={pickImage}
+                        className="border border-gray-100 bg-white p-4 rounded-lg items-center"
+                      >
                         <FontAwesome name="upload" size={15} color="#59A60E" />
                         <Text className="text-gray-100 font-psemibold">
                           Upload File
                         </Text>
                       </TouchableOpacity>
                     </View>
+                    {permitImage ? (
+                      <Image
+                        source={{ uri: permitImage }}
+                        className="w-52 aspect-[3/4] rounded-lg bg-slate-300"
+                      />
+                    ) : null}
                   </View>
                 </View>
               </View>
