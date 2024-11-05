@@ -56,6 +56,12 @@ const Routes = (isOilmill: boolean, isCopraOwner: boolean) => [
     label: "Settings",
     href: null,
   },
+  {
+    name: "camera",
+    icon: icons.profile,
+    label: "Camera",
+    href: null,
+  },
 ];
 
 export default Routes;

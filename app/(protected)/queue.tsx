@@ -9,13 +9,23 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import VirtualQueueHeader from "@/components/VirtualQueueHeader";
 import VirtualQueueTable from "@/components/VirtualQueueTable";
+import { useCameraPermissions } from "expo-camera";
+import { useRouter } from "expo-router";
 
 const Queue: React.FC = () => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [maxScrollY, setMaxScrollY] = useState(1);
+  const router = useRouter();
+
+  const [permission, requestPermission] = useCameraPermissions();
+  const isPermissionGranted = Boolean(permission?.granted);
 
   const handleScanQR = () => {
     console.log("Open QR Scanner");
+    if (!isPermissionGranted) {
+      requestPermission();
+    }
+    router.replace("/camera");
   };
 
   const handleContentSizeChange = (contentWidth: number, height: number) => {
