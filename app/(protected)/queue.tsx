@@ -21,7 +21,6 @@ const Queue: React.FC = () => {
   const isPermissionGranted = Boolean(permission?.granted);
 
   const handleScanQR = () => {
-    console.log("Open QR Scanner");
     if (!isPermissionGranted) {
       requestPermission();
     }

@@ -80,10 +80,8 @@ const transaction = () => {
         });
         setTransactions(response.data.transactions);
         setLoading(false);
-        console.log(response.data.transactions);
       } catch (err: any) {
         setLoading(false);
-        console.log(err.message);
       }
     };
 
@@ -128,8 +126,6 @@ const transaction = () => {
   };
 
   const handleUpdateTransaction = (updatedTransaction: Transaction) => {
-    console.log("Updating transaction:", updatedTransaction);
-
     const updatedTransactions = transactions.map((t) =>
       t.transaction_id === updatedTransaction.transaction_id
         ? updatedTransaction
