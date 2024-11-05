@@ -51,36 +51,38 @@ const ListView: React.FC<ListViewProps> = ({ oilMills, onSwitchView }) => {
         </View>
 
         {/* Search Bar */}
-        <View className="mb-4">
+        <View className="mb-2">
           <SearchInput icon={icons.search} handlePress={() => {}} />
         </View>
 
         {/* Categories */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          className="mb-4"
-        >
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              onPress={() => setActiveCategory(category.id)}
-              className={`mr-4 px-6 py-2 rounded-full ${
-                activeCategory === category.id ? "bg-primary" : "bg-white"
-              }`}
-            >
-              <Text
-                className={`font-pmedium ${
-                  activeCategory === category.id
-                    ? "text-white"
-                    : "text-gray-100"
+        <View className="mb-1">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="pr-16 py-2"
+          >
+            {categories.map((category) => (
+              <TouchableOpacity
+                key={category.id}
+                onPress={() => setActiveCategory(category.id)}
+                className={`mr-4 px-6 py-2 rounded-full ${
+                  activeCategory === category.id ? "bg-primary" : "bg-white"
                 }`}
               >
-                {category.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text
+                  className={`font-pmedium ${
+                    activeCategory === category.id
+                      ? "text-white"
+                      : "text-gray-100"
+                  }`}
+                >
+                  {category.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* Mills List */}
         <FlatList
