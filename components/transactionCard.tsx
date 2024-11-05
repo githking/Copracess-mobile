@@ -1,21 +1,28 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import { formatCurrency } from "react-native-format-currency";
-import { Transaction } from "../types/type";
-import { icons } from "../constants";
+import { icons } from "@/constants";
 
-import type { TransactionCardProps } from "../types/type";
+import type {
+  CopraOwnerTransaction,
+  OilmillTransaction,
+  TransactionCardProps,
+} from "@/types/type";
+import { useAuth } from "@/context/AuthContext";
 
 const TransactionCard: React.FC<TransactionCardProps> = ({
   transaction,
   isEditMode,
   onPress,
 }) => {
+  const { authState } = useAuth();
   const [value] = formatCurrency({
-    amount: Number(transaction.transaction_amount),
+    amount: Number(transaction.totalAmount),
     code: "PHP",
   });
   const isPaid = transaction.status === "Paid";
+
+  const isCopraOwner = authState?.data.role === "COPRA_BUYER";
 
   return (
     <TouchableOpacity
@@ -27,14 +34,18 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
     >
       <View className="flex-row justify-between items-center mb-2">
         <Text className="font-pregular text-xs text-gray-100">
-          CREATED: {transaction.transaction_date_time}
+          CREATED: {transaction.date} {transaction.time}
         </Text>
         <Text className="font-psemibold text-primary text-lg text-green-600">
           {value}
         </Text>
       </View>
       <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-xl font-psemibold">{transaction.buyer_name}</Text>
+        <Text className="text-xl font-psemibold">
+          {isCopraOwner
+            ? (transaction as CopraOwnerTransaction).oilMillCompanyName
+            : (transaction as OilmillTransaction).copraOwnerName}
+        </Text>
         {isEditMode && (
           <View className="bg-secondary rounded-full p-2">
             <Image
@@ -50,21 +61,21 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
           <Text className="font-psemibold text-sm text-primary pr-2">
             PLATE NUMBER
           </Text>
-          <Text className="font-psemibold">{transaction.plate_number}</Text>
+          <Text className="font-psemibold">{transaction.plateNumber}</Text>
         </View>
         <View className="flex-2 border-r-2 border-r-gray-200 ml-2">
           <Text className="font-psemibold text-sm text-primary pr-2">
             WEIGHT
           </Text>
           <Text className="font-psemibold">
-            {transaction.copra_weight} tons
+            {transaction.booking.estimatedWeight} tons
           </Text>
         </View>
         <View className="flex-2 border-r-gray-200 ml-2">
           <Text className="font-psemibold text-sm text-primary">
             PAYMENT METHOD
           </Text>
-          <Text className="font-psemibold">{transaction.payment_method}</Text>
+          <Text className="font-psemibold">{transaction.paymentType}</Text>
         </View>
       </View>
       <View className="mt-2 self-start">
