@@ -47,9 +47,18 @@ const TabsLayout = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#59A60E" />
-      </View>
+      <>
+        <Stack.Screen
+          options={{
+            headerShown: false,
+          }}
+        />
+
+        {/* Place the content separately */}
+        <View className="flex-1 items-center justify-center">
+          <ActivityIndicator size="large" color="#59A60E" />
+        </View>
+      </>
     );
   }
 
@@ -65,6 +74,7 @@ const TabsLayout = () => {
     <>
       <Stack.Screen
         options={{
+          headerShown: true,
           headerShadowVisible: false,
           headerStyle: {
             backgroundColor: "white",
