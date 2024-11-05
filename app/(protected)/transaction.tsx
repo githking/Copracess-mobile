@@ -5,6 +5,7 @@ import {
   Image,
   ActivityIndicator,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useState } from "react";
@@ -56,39 +57,44 @@ import axios from "axios";
 const transaction = () => {
   const { authState } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
-
   const [transactions, setTransactions] = useState<any[]>([]);
 
+  const fetchTransactions = async () => {
+    if (!authState?.accessToken) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get("/transactions", {
+        headers: {
+          Authorization: `Bearer ${authState.accessToken}`,
+        },
+      });
+      console.log("Transctions data: ", response.data.transactions);
+      setTransactions(response.data.transactions);
+      setLoading(false);
+      setRefreshing(false);
+    } catch (err: any) {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchTransactions = async () => {
-      if (!authState?.accessToken) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const response = await axios.get("/transactions", {
-          headers: {
-            Authorization: `Bearer ${authState.accessToken}`,
-          },
-        });
-        setTransactions(response.data.transactions);
-        setLoading(false);
-        console.log(response.data.transactions);
-      } catch (err: any) {
-        setLoading(false);
-        console.log(err.message);
-      }
-    };
-
     fetchTransactions();
   }, [authState?.accessToken]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchTransactions();
+  };
 
   const handleFABPress = () => {
     setIsModalVisible(true);
@@ -128,8 +134,6 @@ const transaction = () => {
   };
 
   const handleUpdateTransaction = (updatedTransaction: Transaction) => {
-    console.log("Updating transaction:", updatedTransaction);
-
     const updatedTransactions = transactions.map((t) =>
       t.transaction_id === updatedTransaction.transaction_id
         ? updatedTransaction
@@ -144,7 +148,7 @@ const transaction = () => {
     <View className="flex-1 bg-off-100">
       <FlatList
         data={transactions}
-        keyExtractor={(item) => item.transaction_id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TransactionCard
             transaction={item}
@@ -152,6 +156,9 @@ const transaction = () => {
             onPress={() => handleTransactionPress(item)}
           />
         )}
+        refreshControl={
+          <RefreshControl onRefresh={onRefresh} refreshing={refreshing} />
+        }
         className="px-4 pb-24"
         keyboardShouldPersistTaps="handled"
         ListEmptyComponent={() => (

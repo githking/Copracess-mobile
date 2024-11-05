@@ -32,6 +32,67 @@ export declare interface Transaction {
   status: string;
 }
 
+export declare interface OilmillTransaction {
+  booking: {
+    deliveryDate: string;
+    description: string;
+    estimatedWeight: number;
+    plateNumber: string;
+  };
+  bookingId: string;
+  copraOwner: {
+    email: string;
+    name: string;
+  };
+  copraOwnerEmail: string;
+  copraOwnerId: string;
+  copraOwnerName: string;
+  date: string;
+  dateTrans: string;
+  dateUpdate: string;
+  discount: number | null;
+  id: string;
+  invoiceID: string | null;
+  oilMillCompanyId: string;
+  paymentType: string;
+  payoutID: string | null;
+  plateNumber: string;
+  remarks: string | null;
+  status: string;
+  time: string;
+  totalAmount: number | null;
+}
+
+export declare interface CopraOwnerTransaction {
+  booking: {
+    deliveryDate: string;
+    description: string;
+    estimatedWeight: number;
+  };
+  bookingId: string;
+  copraOwnerId: string;
+  date: string;
+  dateTrans: string;
+  dateUpdate: string;
+  discount: number | null;
+  id: string;
+  invoiceID: string | null;
+  oilMillCompany: {
+    address: string;
+    name: string;
+  };
+  oilMillCompanyAddress: string;
+  oilMillCompanyId: string;
+  oilMillCompanyName: string;
+  paymentType: string;
+  payoutID: string | null;
+  plateNumber: string;
+  remarks: string | null;
+  status: string;
+  time: string;
+  totalAmount: number | null;
+}
+
 export interface SearchInputProps {
   initialQuery?: string;
   icon: ImageSourcePropType;
@@ -46,8 +107,9 @@ export interface AddTransactionModalProps {
   visible: boolean;
   onClose: () => void;
 }
+
 interface TransactionCardProps {
-  transaction: Transaction;
+  transaction: CopraOwnerTransaction | OilmillTransaction;
   isEditMode: boolean;
   onPress: () => void;
 }

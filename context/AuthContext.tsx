@@ -70,9 +70,7 @@ export const AuthProvider = ({ children }: any) => {
       const storedUserData = await SecureStore.getItemAsync(USER_DATA_KEY);
       const userData = storedUserData ? JSON.parse(storedUserData) : null;
 
-      console.log("Stored Access:", accessToken);
       console.log("Stored Data:", userData);
-      console.log("Stored Refresh:", refreshToken);
 
       if (accessToken && refreshToken) {
         axios.defaults.headers.common[

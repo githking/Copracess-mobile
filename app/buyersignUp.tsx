@@ -37,7 +37,6 @@ const buyerSignUp = () => {
 
     try {
       const response = await axios.post("/register", form);
-      console.log("Registration successful:", response.data);
       Alert.alert(
         "Success",
         "Registration successful! Please check your email for activation."
