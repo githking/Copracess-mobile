@@ -148,7 +148,7 @@ const transaction = () => {
     <View className="flex-1 bg-off-100">
       <FlatList
         data={transactions}
-        keyExtractor={(item) => item.transaction_id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TransactionCard
             transaction={item}
