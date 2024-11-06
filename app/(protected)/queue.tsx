@@ -5,6 +5,7 @@ import {
   StatusBar,
   TouchableOpacity,
   Animated,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import VirtualQueueHeader from "@/components/VirtualQueueHeader";
@@ -20,11 +21,24 @@ const Queue: React.FC = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const isPermissionGranted = Boolean(permission?.granted);
 
-  const handleScanQR = () => {
+  const handleScanQR = async () => {
     if (!isPermissionGranted) {
-      requestPermission();
+      const { granted } = await requestPermission();
+      if (granted) {
+        // If permission is granted, navigate to the camera
+        router.replace("/camera");
+      } else {
+        // If permission is denied, show an alert
+        Alert.alert(
+          "Camera Permission Denied",
+          "You need to enable camera access to scan QR codes.",
+          [{ text: "OK" }]
+        );
+      }
+    } else {
+      // If permission is already granted, navigate to the camera
+      router.replace("/camera");
     }
-    router.replace("/camera");
   };
 
   const handleContentSizeChange = (contentWidth: number, height: number) => {
