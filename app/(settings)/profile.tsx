@@ -1,3 +1,5 @@
+// app/(settings)/profile.tsx
+
 import React from "react";
 import { Stack } from "expo-router";
 import ProfilePage from "../../components/ProfilePage";

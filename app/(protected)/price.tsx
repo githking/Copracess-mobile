@@ -1,3 +1,4 @@
+// app/(protected)/price.tsx
 import React, { useState } from "react";
 import { View, SafeAreaView, ScrollView, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";

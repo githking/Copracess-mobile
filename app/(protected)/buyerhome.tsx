@@ -1,3 +1,5 @@
+// app/(protected)/buyerhome.tsx
+
 import React from "react";
 import { View, ScrollView } from "react-native";
 import { StatusBar } from "expo-status-bar";

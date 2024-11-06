@@ -1,3 +1,4 @@
+// app/(auth)/buyersignUp.tsx
 import {
   View,
   Text,

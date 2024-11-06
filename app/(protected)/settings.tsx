@@ -1,3 +1,4 @@
+// app/(protected)/settings.tsx
 import React from "react";
 import SettingsPage from "@/components/SettingsPage";
 import { Stack } from "expo-router";

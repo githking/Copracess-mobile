@@ -1,225 +1,150 @@
+// app/(protected)/transaction.tsx
+import React, { useState } from "react";
 import {
   View,
   Text,
   FlatList,
   Image,
-  ActivityIndicator,
   TouchableOpacity,
+  ActivityIndicator,
   RefreshControl,
+  StyleSheet,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useEffect, useState } from "react";
-import { images } from "@/constants";
-import { icons } from "@/constants";
+import { useTransactions } from "@/services/transaction/hooks";
 import TransactionCard from "@/components/transactionCard";
-import AddFab from "@/components/AddFab";
-import AddTransactionModal from "@/components/AddTransactionModal";
-import UpdateTransactionModal from "@/components/UpdateTransactionModal";
 import SearchInput from "@/components/SearchInput";
 import FilterModal from "@/components/FilterModal";
-import type { Filters, Transaction } from "@/types/type";
+import { images, icons } from "@/constants";
+import type {
+  Filters,
+  OilmillTransaction,
+  CopraOwnerTransaction,
+} from "@/types/type";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+import Loading from "@/components/loadings";
 
-// const transactions = [
-//   {
-//     transaction_id: "1",
-//     transaction_date_time: "2024-08-12 05:19:20",
-//     buyer_name: "Hakim Saricala",
-//     transaction_amount: "140000.00",
-//     plate_number: "ABC123",
-//     copra_weight: 8,
-//     payment_method: "Bank",
-//     status: "Paid",
-//   },
-//   {
-//     transaction_id: "2",
-//     transaction_date_time: "2024-08-12 05:19:20",
-//     buyer_name: "King Baltazar",
-//     transaction_amount: "24000.00",
-//     plate_number: "JAB789",
-//     copra_weight: 2,
-//     payment_method: "Cash",
-//     status: "Pending",
-//   },
-//   {
-//     transaction_id: "3",
-//     transaction_date_time: "2024-09-12 05:19:20",
-//     buyer_name: "Lester David",
-//     transaction_amount: "170000.00",
-//     plate_number: "KYU119",
-//     copra_weight: 10,
-//     payment_method: "Cheque",
-//     status: "Paid",
-//   },
-// ];
+const styles = StyleSheet.create({
+  contentContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 96,
+  },
+});
 
-const transaction = () => {
-  const { authState } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
+const TransactionScreen = () => {
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] =
-    useState<Transaction | null>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const fetchTransactions = async () => {
-    if (!authState?.accessToken) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await axios.get("/transactions", {
-        headers: {
-          Authorization: `Bearer ${authState.accessToken}`,
-        },
-      });
-      console.log("Transctions data: ", response.data.transactions);
-      setTransactions(response.data.transactions);
-      setLoading(false);
-      setRefreshing(false);
-    } catch (err: any) {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  const { transactions, loading, refreshing, error, refresh, updateFilters } =
+    useTransactions();
 
-  useEffect(() => {
-    fetchTransactions();
-  }, [authState?.accessToken]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchTransactions();
-  };
-
-  const handleFABPress = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
-  };
-
-  const handleOpenFilterModal = () => {
-    setIsFilterModalVisible(true);
-  };
-
-  const handleCloseFilterModal = () => {
-    setIsFilterModalVisible(false);
-  };
-
+  // Filter Handlers
+  const handleOpenFilterModal = () => setIsFilterModalVisible(true);
+  const handleCloseFilterModal = () => setIsFilterModalVisible(false);
   const handleApplyFilters = (filters: Filters) => {
-    console.log("Filters applied:", filters);
+    updateFilters(filters);
     handleCloseFilterModal();
   };
 
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
+  if (loading) {
+    return <Loading variant="fullscreen" message="Loading transactions..." />;
+  }
+
+  // Search Handler
+  const handleSearch = () => {
+    updateFilters({ searchQuery });
   };
 
-  const handleTransactionPress = (transaction: Transaction) => {
-    if (isEditMode) {
-      setSelectedTransaction(transaction);
-      setIsUpdateModalVisible(true);
-    }
-  };
+  const ErrorDisplay = () => (
+    <View className="flex flex-col items-center justify-center p-4">
+      <Text className="text-red-500 font-pmedium text-center mb-2">
+        {error}
+      </Text>
+      <TouchableOpacity
+        className="bg-primary px-4 py-2 rounded-lg"
+        onPress={refresh}
+      >
+        <Text className="text-white font-pmedium">Try Again</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
-  const handleCloseUpdateModal = () => {
-    setIsUpdateModalVisible(false);
-    setSelectedTransaction(null);
-  };
+  const EmptyListComponent = () => (
+    <View className="flex flex-col items-center justify-center py-10">
+      {!loading ? (
+        <>
+          <Image
+            source={images.empty}
+            className="w-40 h-40"
+            resizeMode="contain"
+          />
+          <Text className="text-gray-100 font-pmedium mt-4">
+            No transactions found
+          </Text>
+        </>
+      ) : (
+        <ActivityIndicator size="large" color="#59A60E" />
+      )}
+    </View>
+  );
 
-  const handleUpdateTransaction = (updatedTransaction: Transaction) => {
-    const updatedTransactions = transactions.map((t) =>
-      t.transaction_id === updatedTransaction.transaction_id
-        ? updatedTransaction
-        : t
-    );
+  const HeaderComponent = () => (
+    <View className="pt-4">
+      <View className="flex flex-row items-center space-x-2 w-full">
+        <View className="flex-1">
+          <SearchInput
+            icon={icons.search}
+            handlePress={handleSearch}
+            initialQuery={searchQuery}
+          />
+        </View>
+        <TouchableOpacity
+          className="p-1.5 border border-primary bg-white rounded-md"
+          onPress={handleOpenFilterModal}
+        >
+          <Image
+            source={icons.filter}
+            className="w-7 h-7"
+            style={{ tintColor: "#59A60E" }}
+          />
+        </TouchableOpacity>
+      </View>
 
-    handleCloseUpdateModal();
-    setIsEditMode(false);
-  };
+      <View className="my-5">
+        <Text className="text-primary text-3xl font-pbold">Transactions</Text>
+      </View>
+    </View>
+  );
 
   return (
     <View className="flex-1 bg-off-100">
-      <FlatList
+      {error && <ErrorDisplay />}
+
+      <FlatList<OilmillTransaction | CopraOwnerTransaction>
         data={transactions}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <TransactionCard
             transaction={item}
-            isEditMode={isEditMode}
-            onPress={() => handleTransactionPress(item)}
+            isEditMode={false}
+            onPress={() => {}}
           />
         )}
         refreshControl={
-          <RefreshControl onRefresh={onRefresh} refreshing={refreshing} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            colors={["#59A60E"]}
+            tintColor="#59A60E"
+          />
         }
-        className="px-4 pb-24"
+        contentContainerStyle={styles.contentContainer}
+        ListEmptyComponent={EmptyListComponent}
+        ListHeaderComponent={HeaderComponent}
+        onEndReachedThreshold={0.5}
         keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={() => (
-          <View className="flex flex-col items-center justify-center">
-            {!loading ? (
-              <>
-                <Image
-                  source={images.empty}
-                  className="w-40 h-40"
-                  alt="No transaction found"
-                  resizeMode="contain"
-                />
-                <Text className="text-sm">No transaction found</Text>
-              </>
-            ) : (
-              <ActivityIndicator size="small" color="#59A60E" />
-            )}
-          </View>
-        )}
-        ListHeaderComponent={() => (
-          <View className="pt-4">
-            <View className="flex flex-row items-center space-x-2 w-full">
-              <View className="flex-1 flex-row items-center">
-                <SearchInput icon={icons.search} handlePress={() => {}} />
-              </View>
-              <TouchableOpacity
-                className="p-1.5 border border-primary bg-white rounded-md"
-                onPress={handleOpenFilterModal}
-              >
-                <Image
-                  source={icons.filter}
-                  className="w-7 h-7"
-                  style={{ tintColor: "#59A60E" }}
-                />
-              </TouchableOpacity>
-            </View>
-            <View className="flex flex-row items-start justify-between my-5">
-              <Text className="flex-1 text-primary text-3xl font-pbold">
-                Transaction
-              </Text>
-              <TouchableOpacity onPress={toggleEditMode}>
-                <Text className="flex-2 text-lg font-pmedium text-primary">
-                  {isEditMode ? "Done" : "Edit"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+        keyboardDismissMode="on-drag"
       />
 
-      <AddFab onPress={handleFABPress} />
-      <AddTransactionModal
-        visible={isModalVisible}
-        onClose={handleCloseModal}
-      />
-      <UpdateTransactionModal
-        visible={isUpdateModalVisible}
-        onClose={handleCloseUpdateModal}
-        onUpdate={handleUpdateTransaction}
-        transaction={selectedTransaction}
-      />
       <FilterModal
         visible={isFilterModalVisible}
         onClose={handleCloseFilterModal}
@@ -229,4 +154,4 @@ const transaction = () => {
   );
 };
 
-export default transaction;
+export default TransactionScreen;

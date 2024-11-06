@@ -1,3 +1,4 @@
+// lib/cloudinary.ts
 import { Cloudinary } from "@cloudinary/url-gen";
 
 const cld = new Cloudinary({

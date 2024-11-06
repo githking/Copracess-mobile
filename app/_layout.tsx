@@ -1,39 +1,43 @@
 import { StyleSheet } from "react-native";
 import React, { useEffect, useState } from "react";
-import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
+import { SplashScreen, Slot, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import SplashScreenComponent from "@/components/SplashScreen";
 
-const StackLayout = () => {
+// Separate Authentication guard component
+const AuthenticationGuard = ({ children }: { children: React.ReactNode }) => {
   const { authState } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+  const [isNavigationReady, setIsNavigationReady] = useState(false);
 
   useEffect(() => {
-    const inAuthGroup = segments[0] === "(protected)";
-
-    if (!authState?.authenticated && inAuthGroup) {
-      router.replace("/");
-    } else if (authState?.data.role === "COPRA_BUYER") {
-      router.replace("/(protected)/buyerhome");
-    } else {
-      router.replace("/(protected)/oilhome");
+    if (!isNavigationReady) {
+      setIsNavigationReady(true);
+      return;
     }
-  }, [authState]);
 
-  return (
-    <Stack>
-      <Stack.Screen name="signIn" options={{ headerShown: false }} />
-      <Stack.Screen name="roleSelect" options={{ headerShown: false }} />
-      <Stack.Screen name="oilsignUp" options={{ headerShown: false }} />
-      <Stack.Screen name="buyersignUp" options={{ headerShown: false }} />
-      <Stack.Screen name="(protected)" options={{ headerShown: true }} />
-    </Stack>
-  );
+    const inAuthGroup = segments[0] === "(auth)";
+    const inProtectedGroup = segments[0] === "(protected)";
+
+    // Handle navigation based on authentication state
+    if (!authState?.authenticated && !inAuthGroup) {
+      router.replace("/(auth)/signIn");
+    } else if (authState?.authenticated && inAuthGroup) {
+      if (authState?.data.role === "COPRA_BUYER") {
+        router.replace("/(protected)/buyerhome");
+      } else {
+        router.replace("/(protected)/oilhome");
+      }
+    }
+  }, [authState?.authenticated, segments, isNavigationReady]);
+
+  return <>{children}</>;
 };
 
-const rootLayout = () => {
+// Root Layout Component
+const RootLayout = () => {
   const [fontsLoaded, error] = useFonts({
     "Poppins-Black": require("../assets/fonts/Poppins-Black.ttf"),
     "Poppins-Bold": require("../assets/fonts/Poppins-Bold.ttf"),
@@ -49,32 +53,40 @@ const rootLayout = () => {
   const [isAppReady, setIsAppReady] = useState(false);
 
   useEffect(() => {
-    if (error) {
-      throw error;
-    }
+    if (error) throw error;
+
     if (fontsLoaded) {
-      setTimeout(() => {
-        SplashScreen.hideAsync();
-        setIsAppReady(true);
-      }, 1000);
+      const prepare = async () => {
+        try {
+          // Hide splash screen after fonts are loaded
+          await SplashScreen.hideAsync();
+          setIsAppReady(true);
+        } catch (e) {
+          console.warn(e);
+        }
+      };
+
+      prepare();
     }
   }, [fontsLoaded, error]);
 
-  const isSplashVisible = !fontsLoaded || !isAppReady;
+  if (!isAppReady || !fontsLoaded) {
+    return (
+      <SplashScreenComponent
+        onFinish={() => setIsAppReady(true)}
+        isFontsLoaded={fontsLoaded}
+        isAppReady={isAppReady}
+      />
+    );
+  }
 
-  return isSplashVisible ? (
-    <SplashScreenComponent
-      onFinish={() => setIsAppReady(true)}
-      isFontsLoaded={fontsLoaded}
-      isAppReady={isAppReady}
-    />
-  ) : (
+  return (
     <AuthProvider>
-      <StackLayout />
+      <AuthenticationGuard>
+        <Slot />
+      </AuthenticationGuard>
     </AuthProvider>
   );
 };
 
-export default rootLayout;
-
-const styles = StyleSheet.create({});
+export default RootLayout;

@@ -1,3 +1,5 @@
+// app/(protected)/map.tsx
+
 import React, { useState } from "react";
 import {
   View,

@@ -1,3 +1,4 @@
+// types/type.d.ts
 export interface SplashScreenProps {
   onFinish: () => void;
 }
@@ -21,7 +22,7 @@ export interface CustomHeaderProps {
   onProfilePress: () => void;
 }
 
-export declare interface Transaction {
+export interface Transaction {
   transaction_id: string;
   transaction_date_time: string;
   buyer_name: string;
@@ -30,6 +31,26 @@ export declare interface Transaction {
   copra_weight: number;
   payment_method: string;
   status: string;
+}
+// types.ts
+export interface TransactionResponse {
+  transactions?: (OilmillTransaction | CopraOwnerTransaction)[];
+  error?: string;
+}
+export interface AddTransactionModalProps {
+  visible: boolean;
+  onClose: () => void;
+}
+export interface TransactionCardProps {
+  transaction: OilmillTransaction | CopraOwnerTransaction;
+  isEditMode: boolean;
+  onPress: () => void;
+}
+export interface UpdateTransactionModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onUpdate: (updatedTransaction: Transaction) => void;
+  transaction: Transaction | null;
 }
 
 export declare interface OilmillTransaction {
@@ -103,17 +124,6 @@ export interface addFABProps {
   onPress: () => void;
 }
 
-export interface AddTransactionModalProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-interface TransactionCardProps {
-  transaction: CopraOwnerTransaction | OilmillTransaction;
-  isEditMode: boolean;
-  onPress: () => void;
-}
-
 export interface FilterModalProps {
   visible: boolean;
   onApplyFilters: (filters: {
@@ -130,13 +140,6 @@ export interface Filters {
   startDate: Date;
   endDate: Date;
   selectedStatus: string[];
-}
-
-export interface UpdateTransactionModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onUpdate: (updatedTransaction: Transaction) => void;
-  transaction: Transaction | null;
 }
 
 export interface BookingCalendarProps {
@@ -309,7 +312,15 @@ export interface SignInForm {
   email: string;
   password: string;
 }
-
+export interface FormFieldProps {
+  title: string;
+  value: string;
+  placeholder?: string;
+  handleChangeText: (e: string) => void;
+  otherStyles?: string;
+  keyboardType?: KeyboardTypeOptions;
+  editable?: boolean;
+}
 export interface User {
   createdAt: string;
   email: string;

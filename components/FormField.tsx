@@ -7,35 +7,34 @@ import {
   Image,
 } from "react-native";
 import { useState } from "react";
-
 import { icons } from "../constants";
 
-const FormField = ({
-  title,
-  value,
-  placeholder,
-  handleChangeText,
-  otherStyles,
-  keyboardType,
-  ...props
-}: {
+interface FormFieldProps {
   title: string;
   value: string;
   placeholder?: string;
   handleChangeText: (e: string) => void;
   otherStyles?: string;
   keyboardType?: KeyboardTypeOptions;
+  editable?: boolean;
+}
+
+const FormField: React.FC<FormFieldProps> = ({
+  title,
+  value,
+  placeholder,
+  handleChangeText,
+  otherStyles,
+  keyboardType,
+  editable = true,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
+
   return (
     <View className={`space-y-2 ${otherStyles}`}>
       <Text className="text-base text-black font-pmedium">{title}</Text>
 
-      <View
-        className="w-full h-16 px-4 bg-white 
-      rounded-2xl border-2 border-primary
-       focus:border-secondary flex flex-row items-center"
-      >
+      <View className="w-full h-16 px-4 bg-white rounded-2xl border-2 border-primary focus:border-secondary flex flex-row items-center">
         <TextInput
           className="flex-1 text-black font-pregular text-base"
           value={value}
@@ -43,7 +42,8 @@ const FormField = ({
           placeholderTextColor="#7B7B8B"
           onChangeText={handleChangeText}
           secureTextEntry={title === "Password" && !showPassword}
-          {...props}
+          keyboardType={keyboardType}
+          editable={editable}
         />
 
         {title === "Password" && (

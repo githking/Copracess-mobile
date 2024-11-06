@@ -1,3 +1,5 @@
+// constants/tabRoutes.ts
+
 import { icons } from "@/constants";
 
 const Routes = (isOilmill: boolean, isCopraOwner: boolean) => [

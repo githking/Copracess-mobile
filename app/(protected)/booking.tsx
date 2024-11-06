@@ -1,3 +1,5 @@
+// app/(protected)/booking.tsx
+
 import {
   View,
   Text,

@@ -1,3 +1,5 @@
+// app/(protected)/oilhome.tsx
+
 import React from "react";
 import { View, ScrollView, StatusBar } from "react-native";
 import SummaryCard from "../../components/SummaryCard";
