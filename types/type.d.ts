@@ -157,15 +157,7 @@ export interface VirtualQueueHeaderProps {
   onTheWay: number;
 }
 
-export interface QueueItem {
-  id: string;
-  time: string;
-  plateNumber: string;
-  owner: string;
-  date: string;
-}
-
-export interface QueueItem {
+export interface VirtualQueueItem {
   id: string;
   time: string;
   plateNumber: string;

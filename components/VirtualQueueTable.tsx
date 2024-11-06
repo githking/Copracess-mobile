@@ -11,11 +11,11 @@ import {
 import { icons } from "../constants";
 import SearchInput from "./SearchInput";
 import FilterModal from "./FilterModal";
-import type { QueueItem, Filters } from "../types/type";
+import type { VirtualQueueItem, Filters } from "@/types/type";
 
 const windowWidth = Dimensions.get("window").width;
 
-const Trucks: QueueItem[] = [
+const Trucks: VirtualQueueItem[] = [
   {
     id: "246",
     time: "10:38 am",
@@ -111,7 +111,13 @@ const VirtualQueueFlatList: React.FC = () => {
     handleCloseFilterModal();
   };
 
-  const renderItem = ({ item, index }: { item: QueueItem; index: number }) => (
+  const renderItem = ({
+    item,
+    index,
+  }: {
+    item: VirtualQueueItem;
+    index: number;
+  }) => (
     <View
       className={`bg-white rounded-lg p-3 mb-2 flex-row ${
         index === 0 ? "border-2 border-secondary-100" : ""
