@@ -166,21 +166,23 @@ export interface VirtualQueueHeaderProps {
 // }
 
 export interface VirtualQueueItem {
-  id: string; // Since `id` is a number in the provided object
+  id: string;
   bookingId: string;
-  date: string; // Date in "Tue Nov 05 2024" format
-  time: string; // Time in "12:50:35 PM" format
-  arrivalTime: string; // ISO string for the arrival time
-  plateNumber: string;
-  owner: string; // Owner name ("Test copra")
-  driverName: string;
-  status: string; // "ACTIVE"
-  isArchived: boolean; // Indicates if the item is archived
-  orgId: string; // Organization ID
-  weight: number; // Weight of the copra
+  date: string;
+  time: string;
+  arrivalTime: string;
+  plateNumber: string | null;
+  owner: string;
+  driverName: string | null;
+  status: string;
+  isArchived: boolean;
+  orgId: string;
+  weight: number;
   booking: {
-    copraBuyer: any; // You can replace `any` with the specific type if you have it
-    estimatedWeight: number;
+    copraBuyer: {
+      name: string;
+    } | null;
+    estimatedWeight: number | null;
   };
 }
 

@@ -1,3 +1,4 @@
+// VirtualQueueTable.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -5,23 +6,60 @@ import {
   TouchableOpacity,
   Image,
   FlatList,
-  Dimensions,
-  SafeAreaView,
   ActivityIndicator,
   RefreshControl,
+  Dimensions,
+  SafeAreaView,
 } from "react-native";
-import { icons } from "../constants";
+import { icons, images } from "@/constants";
 import SearchInput from "./SearchInput";
 import FilterModal from "./FilterModal";
 import type { VirtualQueueItem, Filters } from "@/types/type";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
-import { images } from "@/constants";
-
-const windowWidth = Dimensions.get("window").width;
 
 const VirtualQueueFlatList: React.FC = () => {
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [queue, setQueue] = useState<VirtualQueueItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const { authState } = useAuth();
+
+  const fetchQueue = async () => {
+    if (!authState?.accessToken) {
+      setLoading(false);
+      setError("Authentication required");
+      return;
+    }
+
+    try {
+      const response = await axios.get("/queue", {
+        headers: {
+          Authorization: `Bearer ${authState.accessToken}`,
+        },
+      });
+      console.log("Queue data:", response.data);
+      setQueue(response.data.queue || []); // Ensure queue is always an array
+      setError(null);
+    } catch (err: any) {
+      console.error("Error fetching queue:", err);
+      setError(err.response?.data?.details || "Failed to fetch queue data");
+      setQueue([]); // Reset queue on error
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQueue();
+  }, [authState?.accessToken]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchQueue();
+  };
 
   const handleOpenFilterModal = () => {
     setIsFilterModalVisible(true);
@@ -34,6 +72,7 @@ const VirtualQueueFlatList: React.FC = () => {
   const handleApplyFilters = (filters: Filters) => {
     console.log("Filters applied:", filters);
     handleCloseFilterModal();
+    // Apply filters to queue if needed
   };
 
   const renderItem = ({
@@ -68,102 +107,75 @@ const VirtualQueueFlatList: React.FC = () => {
   );
 
   const ListHeaderComponent = () => (
-    <>
-      <View className="flex-row items-center mb-4">
-        <View className="flex-1 mr-2">
-          <SearchInput icon={icons.search} handlePress={() => {}} />
-        </View>
-        <TouchableOpacity
-          onPress={handleOpenFilterModal}
-          className="bg-white p-2 rounded"
-        >
-          <Image
-            source={icons.filter}
-            className="w-6 h-6"
-            style={{ tintColor: "#59A60E" }}
-          />
-        </TouchableOpacity>
+    <View className="flex-row items-center mb-4">
+      <View className="flex-1 mr-2">
+        <SearchInput icon={icons.search} handlePress={() => {}} />
       </View>
-    </>
-  );
-
-  const ListFooterComponent = () => (
-    <View className="flex-row justify-between mt-4">
-      <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
-        <Text className="text-primary font-medium">PREVIOUS</Text>
-      </TouchableOpacity>
-      <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
-        <Text className="text-primary font-medium">NEXT</Text>
+      <TouchableOpacity
+        onPress={handleOpenFilterModal}
+        className="bg-white p-2 rounded"
+      >
+        <Image
+          source={icons.filter}
+          className="w-6 h-6"
+          style={{ tintColor: "#59A60E" }}
+        />
       </TouchableOpacity>
     </View>
   );
 
-  const { authState } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [queue, setQueue] = useState<any[]>([]);
+  const ListEmptyComponent = () => (
+    <View className="flex flex-col items-center justify-center">
+      {!loading ? (
+        <>
+          <Image
+            source={images.empty}
+            className="w-40 h-40"
+            alt="No queue items found"
+            resizeMode="contain"
+          />
+          <Text className="text-sm text-white my-5">
+            {error || "No queue items found"}
+          </Text>
+        </>
+      ) : (
+        <ActivityIndicator size="small" color="#59A60E" />
+      )}
+    </View>
+  );
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchQueue();
-  };
-
-  const fetchQueue = async () => {
-    if (!authState?.accessToken) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await axios.get("/queue", {
-        headers: {
-          Authorization: `Bearer ${authState.accessToken}`,
-        },
-      });
-      console.log("QUEUE data: ", response.data.queue);
-      setQueue(response.data.queue);
-      setLoading(false);
-      setRefreshing(false);
-    } catch (err: any) {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchQueue();
-  }, [authState?.accessToken]);
+  const ListFooterComponent = () =>
+    queue.length > 0 ? (
+      <View className="flex-row justify-between mt-4">
+        <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
+          <Text className="text-primary font-medium">PREVIOUS</Text>
+        </TouchableOpacity>
+        <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
+          <Text className="text-primary font-medium">NEXT</Text>
+        </TouchableOpacity>
+      </View>
+    ) : null;
 
   return (
     <SafeAreaView className="bg-primary flex-1 rounded-lg">
       <FlatList
         data={queue}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id.toString()}
         ListHeaderComponent={ListHeaderComponent}
         ListFooterComponent={ListFooterComponent}
+        ListEmptyComponent={ListEmptyComponent}
         contentContainerStyle={{ padding: 16 }}
         showsVerticalScrollIndicator={false}
-        scrollEnabled={false}
+        scrollEnabled={true}
         refreshControl={
-          <RefreshControl onRefresh={onRefresh} refreshing={refreshing} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#59A60E"]} // Android
+            tintColor="#59A60E" // iOS
+          />
         }
-        ListEmptyComponent={() => (
-          <View className="flex flex-col items-center justify-center">
-            {!loading ? (
-              <>
-                <Image
-                  source={images.empty}
-                  className="w-40 h-40"
-                  alt="No transaction found"
-                  resizeMode="contain"
-                />
-                <Text className="text-sm text-white my-5">No queue found</Text>
-              </>
-            ) : (
-              <ActivityIndicator size="small" color="#59A60E" />
-            )}
-          </View>
-        )}
       />
 
       <FilterModal
