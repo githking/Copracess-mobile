@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,93 +7,18 @@ import {
   FlatList,
   Dimensions,
   SafeAreaView,
+  ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { icons } from "../constants";
 import SearchInput from "./SearchInput";
 import FilterModal from "./FilterModal";
 import type { VirtualQueueItem, Filters } from "@/types/type";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import { images } from "@/constants";
 
 const windowWidth = Dimensions.get("window").width;
-
-const Trucks: VirtualQueueItem[] = [
-  {
-    id: "246",
-    time: "10:38 am",
-    plateNumber: "ASD153",
-    owner: "Joshua Gonzales",
-    date: "4/9/2024",
-  },
-  {
-    id: "247",
-    time: "10:40 am",
-    plateNumber: "JHC765",
-    owner: "King Hezron",
-    date: "4/9/2024",
-  },
-  {
-    id: "248",
-    time: "10:45 am",
-    plateNumber: "ZAC103",
-    owner: "Bob Cano",
-    date: "4/9/2024",
-  },
-  {
-    id: "249",
-    time: "11:05 am",
-    plateNumber: "JAB809",
-    owner: "Christ David",
-    date: "4/9/2024",
-  },
-  {
-    id: "250",
-    time: "11:18 am",
-    plateNumber: "CLI098",
-    owner: "Lemuel Zaldua",
-    date: "4/9/2024",
-  },
-  {
-    id: "251",
-    time: "11:20 am",
-    plateNumber: "HAG721",
-    owner: "Joseph Laurel",
-    date: "4/9/2024",
-  },
-  {
-    id: "252",
-    time: "11:43 am",
-    plateNumber: "BAN571",
-    owner: "Kalisto Jade",
-    date: "4/9/2024",
-  },
-  {
-    id: "253",
-    time: "1:30 pm",
-    plateNumber: "KAU791",
-    owner: "Ken Bento",
-    date: "4/9/2024",
-  },
-  {
-    id: "254",
-    time: "1:36 pm",
-    plateNumber: "BAH112",
-    owner: "Richard Canto",
-    date: "4/9/2024",
-  },
-  {
-    id: "255",
-    time: "1:43 pm",
-    plateNumber: "POT612",
-    owner: "Rusty Balboa",
-    date: "4/9/2024",
-  },
-  {
-    id: "36",
-    time: "1:57 pm",
-    plateNumber: "KAU118",
-    owner: "Jester Yago",
-    date: "4/9/2024",
-  },
-];
 
 const VirtualQueueFlatList: React.FC = () => {
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -173,10 +98,45 @@ const VirtualQueueFlatList: React.FC = () => {
     </View>
   );
 
+  const { authState } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [queue, setQueue] = useState<any[]>([]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchQueue();
+  };
+
+  const fetchQueue = async () => {
+    if (!authState?.accessToken) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.get("/queue", {
+        headers: {
+          Authorization: `Bearer ${authState.accessToken}`,
+        },
+      });
+      console.log("QUEUE data: ", response.data.queue);
+      setQueue(response.data.queue);
+      setLoading(false);
+      setRefreshing(false);
+    } catch (err: any) {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQueue();
+  }, [authState?.accessToken]);
+
   return (
     <SafeAreaView className="bg-primary flex-1 rounded-lg">
       <FlatList
-        data={Trucks}
+        data={queue}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={ListHeaderComponent}
@@ -184,6 +144,26 @@ const VirtualQueueFlatList: React.FC = () => {
         contentContainerStyle={{ padding: 16 }}
         showsVerticalScrollIndicator={false}
         scrollEnabled={false}
+        refreshControl={
+          <RefreshControl onRefresh={onRefresh} refreshing={refreshing} />
+        }
+        ListEmptyComponent={() => (
+          <View className="flex flex-col items-center justify-center">
+            {!loading ? (
+              <>
+                <Image
+                  source={images.empty}
+                  className="w-40 h-40"
+                  alt="No transaction found"
+                  resizeMode="contain"
+                />
+                <Text className="text-sm text-white my-5">No queue found</Text>
+              </>
+            ) : (
+              <ActivityIndicator size="small" color="#59A60E" />
+            )}
+          </View>
+        )}
       />
 
       <FilterModal
