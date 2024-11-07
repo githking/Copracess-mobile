@@ -22,6 +22,13 @@ interface AuthProps {
   onLogout?: () => Promise<any>;
 }
 
+interface ApiError extends Error {
+  response?: {
+    status: number;
+    data: any;
+  };
+}
+
 const ACCESS_TOKEN_KEY =
   process.env.EXPO_PUBLIC_ACCESS_TOKEN_KEY || "accessToken";
 const REFRESH_TOKEN_KEY =
@@ -34,6 +41,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: any) => {
+  // Initialize axios defaults
   axios.defaults.baseURL =
     process.env.EXPO_PUBLIC_API_URL_DEV || "https://copracess.live/api/mobile";
 
@@ -63,35 +71,68 @@ export const AuthProvider = ({ children }: any) => {
     },
   });
 
+  // Token expiry buffer (1 minute)
+  const tokenExpiryBuffer = 60 * 1000;
+
+  const isTokenExpired = (token: string): boolean => {
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.exp * 1000 <= Date.now() + tokenExpiryBuffer;
+    } catch {
+      return true;
+    }
+  };
+
+  // Load stored tokens on startup
   useEffect(() => {
-    const loadToken = async () => {
-      const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
-      const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-      const storedUserData = await SecureStore.getItemAsync(USER_DATA_KEY);
-      const userData = storedUserData ? JSON.parse(storedUserData) : null;
+    const initializeAuth = async () => {
+      try {
+        const accessToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+        const refreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+        const storedUserData = await SecureStore.getItemAsync(USER_DATA_KEY);
+        const userData = storedUserData ? JSON.parse(storedUserData) : null;
 
-      console.log("Stored Data:", userData);
-
-      if (accessToken && refreshToken) {
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${accessToken}`;
-
-        setAuthState({
-          accessToken,
-          refreshToken,
-          authenticated: true,
-          data: userData,
+        console.log("Loading stored auth data:", {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+          userData,
         });
+
+        if (accessToken && refreshToken) {
+          if (isTokenExpired(accessToken)) {
+            console.log("Stored access token is expired, attempting refresh");
+            await refreshAccessToken();
+          } else {
+            console.log("Setting stored access token");
+            axios.defaults.headers.common[
+              "Authorization"
+            ] = `Bearer ${accessToken}`;
+            setAuthState({
+              accessToken,
+              refreshToken,
+              authenticated: true,
+              data: userData,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing auth:", error);
       }
     };
-    loadToken();
+
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
+      console.log("Attempting login...");
+
+      // Clear any existing auth headers
+      delete axios.defaults.headers.common["Authorization"];
+
       const response = await axios.post(`/auth`, { email, password });
-      console.log("Login Result: ", response.data);
+      console.log("Login successful");
+
       const { accessToken, refreshToken } = response.data;
 
       const decoded: any = jwtDecode(accessToken);
@@ -104,6 +145,7 @@ export const AuthProvider = ({ children }: any) => {
         organizationId: decoded.organizationId,
       };
 
+      // Update state first
       setAuthState({
         accessToken,
         refreshToken,
@@ -111,25 +153,38 @@ export const AuthProvider = ({ children }: any) => {
         data: userData,
       });
 
+      // Set axios default header
       axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
-      await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken);
-      await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken);
-      await SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(userData));
+      console.log(
+        "Setting auth header:",
+        axios.defaults.headers.common["Authorization"]
+      );
+
+      // Store tokens and user data
+      await Promise.all([
+        SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
+        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
+        SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(userData)),
+      ]);
 
       return response;
     } catch (error) {
-      console.error(error);
-      return { error: true, msg: (error as any).response.data.message };
+      console.error("Login error:", error);
+      return { error: true, msg: (error as ApiError).response?.data?.message };
     }
   };
 
   const logout = async () => {
     try {
-      // Clear all tokens
-      await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-      await SecureStore.deleteItemAsync(USER_DATA_KEY);
+      console.log("Logging out...");
+
+      // Clear stored data
+      await Promise.all([
+        SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
+        SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+        SecureStore.deleteItemAsync(USER_DATA_KEY),
+      ]);
 
       // Clear axios headers
       delete axios.defaults.headers.common["Authorization"];
@@ -149,7 +204,6 @@ export const AuthProvider = ({ children }: any) => {
         },
       });
 
-      // Navigate to login
       router.replace("/signIn");
     } catch (error) {
       console.error("Logout error:", error);
@@ -161,81 +215,114 @@ export const AuthProvider = ({ children }: any) => {
       const oldRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
       if (!oldRefreshToken) {
-        console.log("No refresh token found");
-        await logout();
-        return { error: true, msg: "No refresh token available" };
+        throw new Error("No refresh token found");
       }
 
-      // Log token details for debugging
-      console.log("Refresh attempt with token:", {
-        tokenPreview: oldRefreshToken.substring(0, 20) + "...",
-        tokenLength: oldRefreshToken.length,
-      });
+      console.log("Starting token refresh");
 
-      const response = await axios.post(`/auth/refresh`, {
-        token: oldRefreshToken,
-      });
+      // Make refresh request without auth header
+      const response = await axios.post(
+        `/auth/refresh`,
+        {
+          token: oldRefreshToken,
+        },
+        {
+          headers: { Authorization: undefined }, // Explicitly remove auth header for this request
+        }
+      );
 
-      if (response.data.accessToken && response.data.refreshToken) {
-        await SecureStore.setItemAsync(
-          ACCESS_TOKEN_KEY,
-          response.data.accessToken
-        );
-        await SecureStore.setItemAsync(
-          REFRESH_TOKEN_KEY,
-          response.data.refreshToken
-        );
+      const { accessToken, refreshToken } = response.data;
 
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${response.data.accessToken}`;
-
-        return response.data.accessToken;
+      if (!accessToken || !refreshToken) {
+        throw new Error("Invalid token response");
       }
 
-      return { error: true, msg: "Invalid response format" };
+      // Set the new auth header immediately
+      axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+
+      console.log(
+        "New auth header set:",
+        axios.defaults.headers.common["Authorization"]
+      );
+
+      // Update state
+      setAuthState((prev) => ({
+        ...prev,
+        accessToken,
+        refreshToken,
+        authenticated: true,
+      }));
+
+      // Store new tokens
+      await Promise.all([
+        SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
+        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
+      ]);
+
+      return accessToken;
     } catch (error: any) {
-      if (error.response?.status === 401) {
-        console.log("Token refresh failed with 401 - logging out");
-        await logout();
-      }
-      return {
-        error: true,
-        msg: error.response?.data?.message || "Refresh failed",
-      };
+      console.error("Refresh token error:", error);
+      await logout();
+      return null;
     }
   };
+
   useEffect(() => {
     let isRefreshing = false;
-    let failedQueue: any[] = [];
+    let failedQueue: Array<{
+      resolve: (value?: unknown) => void;
+      reject: (reason?: any) => void;
+    }> = [];
 
-    const processQueue = (error: any, token: string | null = null) => {
-      failedQueue.forEach((prom) => {
-        if (error) {
-          prom.reject(error);
-        } else {
-          prom.resolve(token);
+    // Request interceptor
+    const requestInterceptor = axios.interceptors.request.use(
+      async (config) => {
+        // Skip auth header for refresh requests
+        if (config.url?.includes("/auth/refresh")) {
+          return config;
         }
-      });
-      failedQueue = [];
-    };
 
-    const interceptor = axios.interceptors.response.use(
+        // Ensure headers object exists
+        config.headers = config.headers || {};
+
+        const token = authState?.accessToken;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+
+        console.log("Request config:", {
+          url: config.url,
+          method: config.method,
+          headers: {
+            Authorization:
+              typeof config.headers.Authorization === "string"
+                ? config.headers.Authorization.substring(0, 20) + "..."
+                : config.headers.Authorization,
+          },
+        });
+
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    // Response interceptor
+    const responseInterceptor = axios.interceptors.response.use(
       (response) => response,
       async (error) => {
         const originalRequest = error.config;
+        console.log("Response error:", {
+          status: error.response?.status,
+          url: originalRequest?.url,
+          retry: originalRequest?._retry,
+          headers: originalRequest?.headers,
+        });
 
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (isRefreshing) {
-            // Wait for the token refresh
             return new Promise((resolve, reject) => {
               failedQueue.push({ resolve, reject });
-            })
-              .then((token) => {
-                originalRequest.headers["Authorization"] = `Bearer ${token}`;
-                return axios(originalRequest);
-              })
-              .catch((err) => Promise.reject(err));
+            });
           }
 
           originalRequest._retry = true;
@@ -243,22 +330,26 @@ export const AuthProvider = ({ children }: any) => {
 
           try {
             const newToken = await refreshAccessToken();
-            if (newToken && !newToken.error) {
-              // Process any queued requests
-              processQueue(null, newToken);
-              originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-              return axios(originalRequest);
-            } else {
-              processQueue(new Error("Refresh failed"));
-              // if (onLogout) await onLogout();
-              return Promise.reject(new Error("Token refresh failed"));
+            if (!newToken) {
+              throw new Error("Token refresh failed");
             }
-          } catch (refreshError) {
-            processQueue(refreshError);
-            // if (onLogout) await onLogout();
-            return Promise.reject(refreshError);
+
+            // Update the failed request's authorization header
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+
+            // Process other queued requests
+            failedQueue.forEach(({ resolve }) => resolve());
+
+            // Make the original request again
+            const response = await axios(originalRequest);
+
+            return response;
+          } catch (error) {
+            failedQueue.forEach(({ reject }) => reject(error));
+            throw error;
           } finally {
             isRefreshing = false;
+            failedQueue = [];
           }
         }
 
@@ -267,9 +358,10 @@ export const AuthProvider = ({ children }: any) => {
     );
 
     return () => {
-      axios.interceptors.response.eject(interceptor);
+      axios.interceptors.request.eject(requestInterceptor);
+      axios.interceptors.response.eject(responseInterceptor);
     };
-  }, [authState?.refreshToken]);
+  }, [authState?.accessToken]);
 
   const value = {
     onLogin: login,

@@ -26,26 +26,29 @@ const transaction = () => {
 
   const fetchTransactions = async () => {
     if (!authState?.accessToken) {
+      console.log("No access token available");
       setLoading(false);
       return;
     }
-    try {
-      console.log(
-        "Fetching transactions with token:",
-        authState.accessToken.substring(0, 20) + "..."
-      );
 
-      const response = await axios.get("/transactions", {
-        headers: {
-          Authorization: `Bearer ${authState.accessToken}`,
-        },
+    try {
+      // Don't set the header manually here, let the interceptor handle it
+      const response = await axios.get("/transactions");
+
+      console.log("Transaction fetch successful", {
+        status: response.status,
+        dataLength: response.data?.transactions?.length,
       });
 
       setTransactions(response.data.transactions);
-      setLoading(false);
-      setRefreshing(false);
     } catch (error: any) {
-      console.error("Transaction fetch error:", error.response?.status);
+      console.error("Transaction fetch error:", {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+        headers: error.config?.headers,
+      });
+
       if (error.response?.status !== 401) {
         setLoading(false);
         setRefreshing(false);
@@ -55,11 +58,16 @@ const transaction = () => {
 
   useEffect(() => {
     if (authState?.authenticated && authState?.accessToken) {
+      console.log("Auth state triggered transaction fetch", {
+        authenticated: authState.authenticated,
+        hasToken: !!authState.accessToken,
+      });
       fetchTransactions();
     }
   }, [authState?.accessToken, authState?.authenticated]);
 
   const onRefresh = () => {
+    console.log("Manual refresh triggered");
     setRefreshing(true);
     fetchTransactions();
   };

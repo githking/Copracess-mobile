@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, Dimensions, Image } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  Image,
+  ActivityIndicator,
+} from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { icons } from "../constants";
 import type { Filters } from "../types/type";
@@ -26,97 +33,142 @@ const Header: React.FC<{ title: string; onOpenFilter: () => void }> = ({
   </View>
 );
 
-const data = {
-  labels: ["M", "T", "W", "T", "F", "S", "S"],
-  datasets: [
-    {
-      data: [15, 25, 20, 35, 30, 40, 25],
-      color: (opacity = 1) => `rgba(89, 166, 14, ${opacity})`,
-      strokeWidth: 2,
-    },
-    {
-      data: [20, 30, 25, 40, 35, 45, 30],
-      color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
-      strokeWidth: 2,
-    },
-  ],
-  legend: ["Set Price", "Market Average"],
-};
-
 const chartConfig = {
   backgroundGradientFrom: "#ffffff",
   backgroundGradientTo: "#ffffff",
+  decimalPlaces: 1,
   color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  strokeWidth: 2,
-  propsForLabels: {
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  propsForVerticalLabels: {
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  propsForHorizontalLabels: {
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  propsForBackgroundLines: {
-    strokeWidth: 1,
-    stroke: "#e0e0e0",
-  },
-  propsForLegend: {
-    color: "#000",
+  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  style: {
+    borderRadius: 16,
   },
   propsForDots: {
     r: "4",
     strokeWidth: "2",
-    stroke: "#fafafa",
   },
+  propsForLabels: {
+    fontSize: 11,
+    fontFamily: "Poppins-Regular",
+  },
+  propsForVerticalLabels: {
+    fontSize: 10,
+    rotation: 0,
+    fontFamily: "Poppins-Regular",
+  },
+  propsForHorizontalLabels: {
+    fontSize: 10,
+    fontFamily: "Poppins-Regular",
+  },
+  formatYLabel: (value: string) => `₱${parseFloat(value).toFixed(1)}`,
 };
 
-const PriceChart: React.FC = () => {
+interface PriceChartProps {
+  priceHistory: Array<{
+    date: string;
+    price: number;
+    market_price: number;
+  }>;
+  isLoading?: boolean;
+}
+
+const PriceChart: React.FC<PriceChartProps> = ({
+  priceHistory,
+  isLoading = false,
+}) => {
   const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
 
-  const handleOpenFilterModal = () => {
-    setIsFilterModalVisible(true);
-  };
+  if (isLoading) {
+    return (
+      <View className="bg-white p-4 rounded-lg h-[300px] justify-center items-center">
+        <ActivityIndicator size="large" color="#59A60E" />
+      </View>
+    );
+  }
 
-  const handleCloseFilterModal = () => {
-    setIsFilterModalVisible(false);
-  };
+  if (!priceHistory || priceHistory.length === 0) {
+    return (
+      <View className="bg-white p-4 rounded-lg h-[300px] justify-center items-center">
+        <Text className="text-gray-500 font-pregular">
+          No price history available
+        </Text>
+      </View>
+    );
+  }
 
-  const handleApplyFilters = (filters: Filters) => {
-    console.log("Filters applied:", filters);
-    handleCloseFilterModal();
+  const lastSevenDays = priceHistory.slice(-7);
+
+  const chartData = {
+    labels: lastSevenDays.map((p) =>
+      new Date(p.date).toLocaleDateString("en-US", { weekday: "short" })
+    ),
+    datasets: [
+      {
+        data: lastSevenDays.map((p) => p.price || 0),
+        color: (opacity = 1) => `rgba(89, 166, 14, ${opacity})`,
+        strokeWidth: 2,
+      },
+      {
+        data: lastSevenDays.map((p) => p.market_price || 0),
+        color: (opacity = 1) => `rgba(255, 193, 7, ${opacity})`,
+        strokeWidth: 2,
+      },
+    ],
+    legend: ["Set Price", "Market Average"],
   };
 
   return (
-    <View className="bg-white p-2 rounded-lg">
-      <Header title="Price Chart" onOpenFilter={handleOpenFilterModal} />
-      <LineChart
-        data={data}
-        width={screenWidth - 40}
-        height={220}
-        chartConfig={chartConfig}
-        bezier
-        style={{
-          marginVertical: 4,
-          borderRadius: 8,
-        }}
-        withVerticalLines={true}
-        withHorizontalLines={true}
-        withInnerLines={true}
-        withDots={true}
-        withShadow={false}
-        yAxisLabel="₱"
-        yAxisSuffix=""
-        yAxisInterval={1}
-        fromZero
+    <View className="bg-white p-4 rounded-lg">
+      <Header
+        title="Price Chart"
+        onOpenFilter={() => setIsFilterModalVisible(true)}
       />
+
+      <View className="mt-4">
+        <LineChart
+          data={chartData}
+          width={screenWidth - 56}
+          height={220}
+          chartConfig={chartConfig}
+          bezier
+          style={{
+            borderRadius: 8,
+            paddingRight: 0,
+          }}
+          withVerticalLines={false}
+          withHorizontalLines={true}
+          withDots={true}
+          withShadow={false}
+          withScrollableDot={false}
+          withInnerLines={false}
+          yAxisLabel="₱"
+          yAxisSuffix=""
+          yAxisInterval={2}
+          segments={5}
+          fromZero
+        />
+      </View>
+
+      {/* Legend */}
+      <View className="flex-row justify-center items-center mt-4 space-x-6">
+        <View className="flex-row items-center">
+          <View className="w-2.5 h-2.5 rounded-full bg-primary mr-2" />
+          <Text className="text-xs font-pmedium text-gray-700">Set Price</Text>
+        </View>
+        <View className="flex-row items-center">
+          <View className="w-2.5 h-2.5 rounded-full bg-secondary mr-2" />
+          <Text className="text-xs font-pmedium text-gray-700">
+            Market Average
+          </Text>
+        </View>
+      </View>
+
       <FilterModal
         visible={isFilterModalVisible}
-        onClose={handleCloseFilterModal}
-        onApplyFilters={handleApplyFilters}
+        onClose={() => setIsFilterModalVisible(false)}
+        onApplyFilters={(filters: Filters) => {
+          console.log("Filters applied:", filters);
+          setIsFilterModalVisible(false);
+        }}
       />
     </View>
   );

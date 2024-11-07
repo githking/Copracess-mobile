@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -14,8 +14,16 @@ const SetPriceModal: React.FC<SetPriceModalProps> = ({
   onClose,
   onSetPrice,
   selectedDate,
+  currentPrice,
 }) => {
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(currentPrice?.toString() || "");
+
+  useEffect(() => {
+    // Update price input when currentPrice changes
+    if (currentPrice) {
+      setPrice(currentPrice.toString());
+    }
+  }, [currentPrice]);
 
   const handleSetPrice = () => {
     onSetPrice(selectedDate, parseFloat(price));
@@ -34,8 +42,13 @@ const SetPriceModal: React.FC<SetPriceModalProps> = ({
           onPress={(e) => e.stopPropagation()}
         >
           <Text className="text-xl font-pbold mb-4 text-primary">
-            Set Price for {selectedDate}
+            {currentPrice ? "Update" : "Set"} Price for {selectedDate}
           </Text>
+          {currentPrice ? (
+            <Text className="text-gray-500 mb-2">
+              Current price: ₱{currentPrice.toFixed(2)}
+            </Text>
+          ) : null}
           <TextInput
             className="border border-gray-300 rounded-lg p-3 mb-4 text-lg font-pregular"
             keyboardType="numeric"
@@ -52,7 +65,9 @@ const SetPriceModal: React.FC<SetPriceModalProps> = ({
               onPress={handleSetPrice}
               className="bg-primary py-2 px-4 rounded-lg"
             >
-              <Text className="text-white font-pbold">Set Price</Text>
+              <Text className="text-white font-pbold">
+                {currentPrice ? "Update" : "Set"} Price
+              </Text>
             </TouchableOpacity>
           </View>
         </Pressable>

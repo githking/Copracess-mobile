@@ -212,6 +212,7 @@ export interface SetPriceModalProps {
   onClose: () => void;
   onSetPrice: (date: string, price: number) => void;
   selectedDate: string;
+  currentPrice?: number; // Add this prop
 }
 
 export interface PriceCardProps {
