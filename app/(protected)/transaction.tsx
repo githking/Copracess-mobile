@@ -85,6 +85,12 @@ const transaction = () => {
       setLoading(false);
       setRefreshing(false);
     }
+
+    if (authState.data.role === "COPRA_BUYER") {
+      setIsEditMode(false);
+    } else {
+      setIsEditMode(true);
+    }
   };
 
   useEffect(() => {

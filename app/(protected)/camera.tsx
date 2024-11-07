@@ -2,6 +2,7 @@ import { View, Text, SafeAreaView, Linking, AppState } from "react-native";
 import React, { useEffect, useRef } from "react";
 import { Stack } from "expo-router";
 import { CameraView } from "expo-camera";
+import Overlay from "@/components/Overlay";
 
 export default function CameraScreen() {
   const qrLock = useRef(false);
@@ -44,6 +45,8 @@ export default function CameraScreen() {
           }
         }}
       />
+
+      <Overlay />
     </SafeAreaView>
   );
 }
