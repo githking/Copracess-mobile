@@ -17,6 +17,7 @@ const FormField = ({
   handleChangeText,
   otherStyles,
   keyboardType,
+  editable = true,
   ...props
 }: {
   title: string;
@@ -25,6 +26,7 @@ const FormField = ({
   handleChangeText: (e: string) => void;
   otherStyles?: string;
   keyboardType?: KeyboardTypeOptions;
+  editable?: boolean;
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   return (
@@ -44,6 +46,7 @@ const FormField = ({
           onChangeText={handleChangeText}
           secureTextEntry={title === "Password" && !showPassword}
           {...props}
+          editable={editable}
         />
 
         {title === "Password" && (
