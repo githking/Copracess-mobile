@@ -16,6 +16,7 @@ import FilterModal from "@/components/FilterModal";
 import type { Filters } from "@/types/type";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
+import PaymentModal from "@/components/PaymentModal";
 
 const transaction = () => {
   const { authState } = useAuth();
@@ -85,6 +86,20 @@ const transaction = () => {
     handleCloseFilterModal();
   };
 
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+  const handleTransactionPress = (transaction: any) => {
+    setSelectedTransaction(transaction);
+    setIsModalVisible(true);
+    console.log("Transaction clicked:", transaction);
+  };
+
+  const handleConfirmPayment = () => {
+    setIsModalVisible(false);
+    console.log("Confirm:", transaction);
+  };
+
   return (
     <View className="flex-1 bg-off-100">
       <FlatList
@@ -94,7 +109,7 @@ const transaction = () => {
           <TransactionCard
             transaction={item}
             isEditMode={false}
-            onPress={() => {}}
+            onPress={(transaction) => handleTransactionPress(transaction)}
           />
         )}
         refreshControl={
@@ -143,6 +158,13 @@ const transaction = () => {
             </View>
           </View>
         )}
+      />
+
+      <PaymentModal
+        visible={isModalVisible}
+        transaction={selectedTransaction}
+        onConfirm={handleConfirmPayment}
+        onClose={() => setIsModalVisible(false)}
       />
 
       <FilterModal
