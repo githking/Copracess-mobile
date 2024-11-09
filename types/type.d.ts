@@ -108,10 +108,17 @@ export interface AddTransactionModalProps {
   onClose: () => void;
 }
 
-interface TransactionCardProps {
+export interface TransactionCardProps {
   transaction: CopraOwnerTransaction | OilmillTransaction;
   isEditMode: boolean;
-  onPress: () => void;
+  onPress: (transaction: CopraOwnerTransaction | OilmillTransaction) => void;
+}
+
+export interface PaymentModalProps {
+  visible: boolean;
+  transaction: CopraOwnerTransaction | OilmillTransaction | null;
+  onConfirm: () => void;
+  onClose: () => void;
 }
 
 export interface FilterModalProps {

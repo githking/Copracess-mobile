@@ -26,8 +26,8 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
-      disabled={!isEditMode}
+      onPress={() => onPress(transaction)}
+      disabled={isEditMode}
       className={`border-2 ${
         isEditMode ? "border-secondary" : "border-primary"
       } bg-white p-4 rounded-lg shadow-sm shadow-gray-200 mb-3`}
