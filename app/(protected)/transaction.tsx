@@ -97,7 +97,7 @@ const transaction = () => {
 
   const handleConfirmPayment = () => {
     setIsModalVisible(false);
-    console.log("Confirm:", transaction);
+    console.log("Confirm:");
   };
 
   return (

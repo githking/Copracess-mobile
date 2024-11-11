@@ -12,11 +12,20 @@ import {
   Modal,
   TouchableWithoutFeedback,
   ScrollView,
+  Linking,
+  Alert,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker"; // Make sure to import from the correct package
 import PaymentNotFoundModal from "@/components/PaymentNotFoundModal";
 import FormField from "@/components/FormField";
 import CustomButton from "@/components/CustomButton";
+import axios from "axios";
+import { startBackgroundPolling, startPollingTask } from "@/services/polling";
+import * as SecureStore from "expo-secure-store";
+import {
+  checkPaymentStatus,
+  startBackgroundFetch,
+} from "@/services/pollingPayment";
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   visible,
@@ -24,7 +33,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onConfirm,
   onClose,
 }) => {
-  // Early return if no transaction
   if (!transaction) {
     return <PaymentNotFoundModal onClose={onClose} visible={visible} />;
   }
@@ -32,16 +40,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const { authState } = useAuth();
   const isCopraOwner = authState?.data.role === "COPRA_BUYER";
 
-  // Local form state to manage inputs
   const [form, setForm] = useState({
-    discount: 0, // Initialize discount field
+    discount: 0,
     totalAmount: 0,
     remarks: transaction.remarks || "",
     paymentMethod: transaction.paymentType,
     plateNumber: transaction.plateNumber,
+    transactionID: transaction.id,
   });
 
-  // Update form state when any input changes
   const handleInputChange = (name: string, value: string) => {
     setForm((prevForm) => ({
       ...prevForm,
@@ -49,7 +56,6 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }));
   };
 
-  // Handle discount input change (if needed for calculation or validation)
   const handleDiscountChange = (value: string) => {
     const discountValue = parseFloat(value);
     if (!isNaN(discountValue)) {
@@ -68,6 +74,64 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         totalAmount: amountValue,
       }));
     }
+  };
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleOnlinePayment = async () => {
+    try {
+      if (!form.transactionID || !form.paymentMethod || !form.totalAmount) {
+        throw new Error("Incomplete form data");
+      }
+
+      const { data: invoiceResponse } = await axios.post("/transactions", {
+        transactionID: form.transactionID,
+        paymentMethod: form.paymentMethod,
+        discount: form.discount,
+        totalAmount: form.totalAmount,
+        remarks: form.remarks,
+        email: authState?.data.email,
+      });
+
+      console.log("Invoice creation successful:", invoiceResponse);
+
+      if (
+        !invoiceResponse ||
+        !invoiceResponse.invoiceId ||
+        !invoiceResponse.invoiceUrl
+      ) {
+        throw new Error("Missing invoice ID or invoice URL in the response");
+      }
+
+      const invoiceId: string = invoiceResponse.invoiceId;
+      const invoiceUrl: string = invoiceResponse.invoiceUrl;
+
+      await SecureStore.setItemAsync("invoiceID", invoiceId);
+
+      const canOpen = await Linking.canOpenURL(invoiceUrl);
+      if (canOpen) {
+        await Linking.openURL(invoiceUrl);
+      } else {
+        throw new Error("Payment confirmation timed out.");
+      }
+
+      await startBackgroundFetch();
+
+      onConfirm();
+    } catch (error) {
+      console.error("Payment confirmation failed:", error);
+      Alert.alert(
+        "Payment Error",
+        error instanceof Error ? error.message : "An unexpected error occurred."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmPayment = async () => {
+    setIsSubmitting(true);
+    handleOnlinePayment();
   };
 
   return (
@@ -112,14 +176,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     >
                       <Picker.Item label="Cash" value="Cash" />
                       <Picker.Item
-                        label="Bank Transfer"
-                        value="Bank Transfer"
-                      />
-                      <Picker.Item
                         label="Online Payment"
                         value="Online Payment"
                       />
-                      <Picker.Item label="Cheque" value="Cheque" />
                     </Picker>
                   </View>
                 </View>
@@ -155,13 +214,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   otherStyles="mt-2"
                 />
 
-                {/* Action Buttons */}
                 <View className="space-y-4">
                   <CustomButton
-                    title="Confirm"
-                    handlePress={onConfirm}
+                    title={isSubmitting ? "Processing..." : "Confirm"} // Update button text when submitting
+                    handlePress={handleConfirmPayment}
                     containerStyles="mt-7"
-                    isLoading={false}
+                    isLoading={isSubmitting} // Pass loading state
                   />
 
                   <TouchableOpacity
