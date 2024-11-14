@@ -20,7 +20,8 @@ const TransactionCard: React.FC<TransactionCardProps> = ({
         amount: Number(transaction.totalAmount),
         code: "PHP",
     });
-    const isPaid = transaction.status === "COMPLETED";
+    const isPaid =
+        transaction.status === "COMPLETED" || transaction.status === "CLAIMED";
 
     const isCopraOwner = authState?.data.role === "COPRA_BUYER";
 
