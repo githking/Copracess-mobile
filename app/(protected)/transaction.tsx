@@ -52,9 +52,10 @@ const transaction = () => {
             });
 
             if (error.response?.status !== 401) {
-                setLoading(false);
                 setRefreshing(false);
             }
+        } finally {
+            setLoading(false);
         }
     };
 
