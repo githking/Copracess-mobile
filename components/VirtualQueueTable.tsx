@@ -5,10 +5,10 @@ import {
     Text,
     TouchableOpacity,
     Image,
+    Alert,
     FlatList,
     ActivityIndicator,
     RefreshControl,
-    Dimensions,
     SafeAreaView,
 } from "react-native";
 import { icons, images } from "@/constants";
@@ -19,6 +19,7 @@ import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import AssessmentCard from "@/components/AssessmentCard";
 import AssessmentModal from "@/components/AssessmentModal";
+import { saveAssessment } from "@/services/assessment";
 
 const VirtualQueueFlatList: React.FC = () => {
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -77,43 +78,7 @@ const VirtualQueueFlatList: React.FC = () => {
     const handleApplyFilters = (filters: Filters) => {
         console.log("Filters applied:", filters);
         handleCloseFilterModal();
-        // Apply filters to queue if needed
     };
-
-    // const renderItem = ({
-    //     item,
-    //     index,
-    // }: {
-    //     item: VirtualQueueItem;
-    //     index: number;
-    // }) => (
-    //     <View
-    //         className={`bg-white rounded-lg p-3 mb-2 flex-row ${
-    //             index === 0 ? "border-2 border-secondary-100" : ""
-    //         }`}
-    //     >
-    //         <View className="w-1/5 justify-center">
-    //             <Text className="text-lg font-bold text-primary">
-    //                 #{item.id}
-    //             </Text>
-    //             <Text className="text-xs text-gray-500">{item.time}</Text>
-    //         </View>
-    //         <View className="w-2/5 justify-center">
-    //             <Text className="text-sm font-semibold">{item.owner}</Text>
-    //             <Text className="text-xs text-gray-500">
-    //                 {item.plateNumber}
-    //             </Text>
-    //         </View>
-    //         <View className="w-2/5 items-end justify-center">
-    //             <Text className="text-sm">{item.date}</Text>
-    //             {index === 0 && (
-    //                 <Text className="text-xs text-secondary-200 font-semibold">
-    //                     Currently Unloading
-    //                 </Text>
-    //             )}
-    //         </View>
-    //     </View>
-    // );
 
     const ListHeaderComponent = () => (
         <View className="flex-row items-center mb-4">
@@ -166,7 +131,7 @@ const VirtualQueueFlatList: React.FC = () => {
         ) : null;
 
     const [isAssessmentModalVisible, setIsAssessmentModalVisible] =
-        useState(false); // For assessment modal
+        useState(false);
     const [selectedItem, setSelectedItem] = useState<VirtualQueueItem | null>(
         null
     );
@@ -176,20 +141,42 @@ const VirtualQueueFlatList: React.FC = () => {
         setIsAssessmentModalVisible(true);
     };
 
-    // Function to close the assessment modal
     const handleCloseAssessmentModal = () => {
         setIsAssessmentModalVisible(false);
         setSelectedItem(null);
     };
 
-    const handleSaveAssessment = (details: {
+    const handleSaveAssessment = async (details: {
         actualWeight: string;
         moistureContent: string;
         qualityGrade: string;
     }) => {
-        console.log("Selected Item:", selectedItem);
-        console.log("Saved Assessment Details:", details);
-        handleCloseAssessmentModal();
+        if (!authState?.accessToken) {
+            console.error("No access token found");
+            Alert.alert("Error", "No access token found");
+            return;
+        }
+
+        if (!selectedItem) {
+            console.log("No selected item");
+            Alert.alert("Error", "No selected item");
+            return;
+        }
+        const { id, bookingId } = selectedItem;
+        const formData = {
+            bookingId: bookingId,
+            actualWeight: details.actualWeight,
+            moistureContent: details.moistureContent,
+            qualityGrade: details.qualityGrade,
+            oilMillId: authState.data.organizationId,
+        };
+
+        await saveAssessment(
+            formData,
+            authState.accessToken,
+            onRefresh,
+            handleCloseAssessmentModal
+        );
     };
 
     return (
