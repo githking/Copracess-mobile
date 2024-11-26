@@ -22,36 +22,6 @@ const OilHome = () => {
         weight: [],
     });
 
-    // const chartData = {
-    //   expense: {
-    //     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    //     datasets: [
-    //       {
-    //         data: [420000, 457400, 495400, 480000, 450000, 470000, 490000],
-    //       },
-    //     ],
-    //   },
-    //   weight: {
-    //     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-    //     datasets: [
-    //       {
-    //         data: [85, 95, 65, 90, 75, 85, 88],
-    //       },
-    //     ],
-    //   },
-    // };
-
-    // const chartSummaryData = {
-    //   expense: [
-    //     { label: "Total expense", value: "₱3,202,200" },
-    //     { label: "Average expense", value: "₱457,300" },
-    //   ],
-    //   weight: [
-    //     { label: "Total weight", value: "748 TONS" },
-    //     { label: "Average weight", value: "103 TONS" },
-    //   ],
-    // };
-
     const [queueData, setQueueData] = useState<QueueItem[]>([]);
 
     // Queue data
