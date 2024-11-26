@@ -92,8 +92,8 @@ const CopraHome = () => {
                             items={[
                                 {
                                     label: "TOTAL REVENUE",
-                                    value: "223,105",
-                                    unit: "₱",
+                                    value: chartSummaryData.expense_revenue[0].value,
+                                    unit: "",
                                 },
                                 {
                                     label: "TOTAL TRANSACTIONS",
