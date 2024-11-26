@@ -7,7 +7,6 @@ import PriceSection from "@/components/PriceSection";
 import axios from "axios";
 
 const CopraHome = () => {
-    // State to hold the chart data and summary
     const [chartData, setChartData] = useState({
         expense_revenue: {
             labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -22,17 +21,15 @@ const CopraHome = () => {
         ],
     });
 
-    // Fetch revenue data from the API
     const fetchRevenueData = async () => {
         try {
-            const response = await axios.get("/dashboard/coprahome"); // Adjust API path as needed
+            const response = await axios.get("/dashboard/coprahome");
             const { revenue } = response.data;
             console.log("revenue", revenue);
 
-            // Update chart data and summary
             setChartData({
                 expense_revenue: {
-                    labels: revenue.labels, // ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+                    labels: revenue.labels,
                     datasets: [{ data: revenue.datasets[0].data }],
                 },
             });
@@ -49,10 +46,9 @@ const CopraHome = () => {
     };
 
     useEffect(() => {
-        fetchRevenueData(); // Fetch data when the component mounts
+        fetchRevenueData();
     }, []);
 
-    // Dummy data for price list
     const priceData = [
         {
             id: "1",
