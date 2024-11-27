@@ -4,6 +4,7 @@ import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { useFonts } from "expo-font";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import SplashScreenComponent from "@/components/SplashScreen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const StackLayout = () => {
   const { authState } = useAuth();
@@ -69,9 +70,11 @@ const rootLayout = () => {
       isAppReady={isAppReady}
     />
   ) : (
-    <AuthProvider>
-      <StackLayout />
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <StackLayout />
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 };
 
