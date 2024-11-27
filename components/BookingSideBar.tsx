@@ -123,6 +123,7 @@ const BookingHistorySidebar: React.FC<BookingHistorySidebarProps> = ({
   const sidebarWidth = screenWidth * 0.75; // 75% of screen width
 
   const handleViewQRCode = (data: string) => {
+    console.log(data);
     setQrCodeData(data);
     setQrModalVisible(true);
   };

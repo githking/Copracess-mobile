@@ -202,7 +202,7 @@ const MapScreen = () => {
         >
           <MaterialCommunityIcons
             name="store"
-            size={20}
+            size={35}
             color={isSelected ? "#FFFFFF" : "#59A60E"}
           />
           <Text
@@ -262,8 +262,6 @@ const MapScreen = () => {
           provider={PROVIDER_GOOGLE}
           style={{ width: screenWidth, height: screenHeight }}
           initialRegion={PHILIPPINES_BOUNDS}
-          minZoomLevel={6}
-          maxZoomLevel={18}
           showsUserLocation={true}
           showsMyLocationButton={true}
         >
@@ -338,8 +336,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     borderRadius: 8,
     padding: 4,
   },
