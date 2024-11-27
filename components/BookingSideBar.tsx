@@ -9,43 +9,104 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import type { Booking, BookingHistorySidebarProps } from "../types/type";
 import QRCodeModal from "../components/QrCodeModal";
 
+interface Booking {
+  id: string;
+  description: string;
+  copraBuyerId: string;
+  oilMillId: string;
+  estimatedWeight: number;
+  deliveryDate: string;
+  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  driver: string;
+  plateNumber: string;
+  verificationToken?: string;
+  createdAt: string;
+  qrCodeUrl?: string;
+  price?: number;
+}
+interface Organization {
+  id: string;
+  name: string;
+  address: string;
+}
+
+interface BookingHistorySidebarProps {
+  isVisible: boolean;
+  onClose: () => void;
+  bookingHistory: Booking[];
+  oilMills: Organization[]; // Add this prop
+}
+const getMillName = (millId: string, oilMills: Organization[]) => {
+  const mill = oilMills.find((mill) => mill.id === millId);
+  return mill?.name || "Unknown Mill";
+};
 const formatDate = (dateString: string) => {
   if (!dateString) return "No date selected";
   const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
+  return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  };
-  return date.toLocaleDateString("en-US", options);
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const BookingHistoryCard = ({
   booking,
   onViewQRCode,
+  oilMills, // Add this prop
 }: {
   booking: Booking;
   onViewQRCode: (data: string) => void;
+  oilMills: Organization[];
 }) => (
   <View className="bg-white p-4 rounded-md mb-4 shadow-sm">
-    <Text className="font-psemibold text-lg mb-2">{booking.destination}</Text>
-    <Text className="font-pregular mb-1">Date: {formatDate(booking.date)}</Text>
-    <Text className="font-pregular mb-1">Weight: {booking.weight} tons</Text>
+    <View className="flex-row justify-between items-center mb-2">
+      <Text className="font-psemibold text-lg text-primary">
+        {getMillName(booking.oilMillId, oilMills)}
+      </Text>
+      <Text
+        className={`text-sm font-pmedium px-2 py-1 rounded ${
+          booking.status === "PENDING"
+            ? "bg-yellow-100 text-yellow-800"
+            : booking.status === "COMPLETED"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+        }`}
+      >
+        {booking.status}
+      </Text>
+    </View>
+    <Text className="font-pregular mb-1">
+      Delivery: {formatDate(booking.deliveryDate)}
+    </Text>
+    <Text className="font-pregular mb-1">
+      Weight: {booking.estimatedWeight} tons
+    </Text>
     <Text className="font-pregular mb-1">
       Plate Number: {booking.plateNumber}
     </Text>
-    <Text className="font-pregular mb-2">Status: {booking.status}</Text>
-    <TouchableOpacity
-      className="bg-primary py-2 rounded-md"
-      onPress={() => onViewQRCode(`Booking: ${booking.id}`)}
-    >
-      <Text className="text-white text-center font-psemibold">
-        View QR Code
-      </Text>
-    </TouchableOpacity>
+    <Text className="font-pregular mb-1">Driver: {booking.driver}</Text>
+    {booking.price && (
+      <Text className="font-pregular mb-1">Price: ₱{booking.price}/kg</Text>
+    )}
+    <Text className="font-pregular mb-2 text-gray-500">
+      {booking.description}
+    </Text>
+
+    {booking.qrCodeUrl && (
+      <TouchableOpacity
+        className="bg-primary py-2 rounded-md"
+        onPress={() => onViewQRCode(booking.qrCodeUrl || "")}
+      >
+        <Text className="text-white text-center font-psemibold">
+          View QR Code
+        </Text>
+      </TouchableOpacity>
+    )}
   </View>
 );
 
@@ -53,6 +114,7 @@ const BookingHistorySidebar: React.FC<BookingHistorySidebarProps> = ({
   isVisible,
   onClose,
   bookingHistory,
+  oilMills,
 }) => {
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [qrCodeData, setQrCodeData] = useState("");
@@ -67,9 +129,9 @@ const BookingHistorySidebar: React.FC<BookingHistorySidebarProps> = ({
 
   return (
     <Modal
+      visible={isVisible}
       animationType="slide"
       transparent={true}
-      visible={isVisible}
       onRequestClose={onClose}
     >
       <View className="flex-1 flex-row">
@@ -94,6 +156,7 @@ const BookingHistorySidebar: React.FC<BookingHistorySidebarProps> = ({
                 <BookingHistoryCard
                   booking={item}
                   onViewQRCode={handleViewQRCode}
+                  oilMills={oilMills}
                 />
               )}
               keyExtractor={(item) => item.id}

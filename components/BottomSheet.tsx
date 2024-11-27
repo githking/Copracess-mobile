@@ -31,22 +31,21 @@ interface Organization {
   creatorId: string;
   geolocation: Geolocation;
   price: Price[];
+  distance?: number;
 }
 
 interface OrganizationBottomSheetProps {
   organizations: Organization[];
   onOrganizationSelect: (organization: Organization) => void;
   onClose: () => void;
-}
-
-interface RenderItemProps {
-  item: Organization;
+  visible?: boolean;
 }
 
 const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
   organizations,
   onOrganizationSelect,
   onClose,
+  visible = true,
 }) => {
   const snapPoints = useMemo(() => ["25%", "50%", "90%"], []);
   const router = useRouter();
@@ -57,18 +56,25 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
       pathname: "/booking",
       params: {
         organizationId: organization.id,
-        organizationName: organization.name,
       },
     });
   };
+  const getLatestPrice = (prices: Price[]) => {
+    if (!prices || prices.length === 0) return null;
 
-  const renderOrganizationCard = ({ item }: RenderItemProps) => {
-    const latestPrice =
-      item.price && item.price.length > 0
-        ? item.price.reduce((latest: Price, current: Price) =>
-            new Date(current.date) > new Date(latest.date) ? current : latest
-          )
-        : null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const todayPrice = prices.find((price) => {
+      const priceDate = new Date(price.date);
+      priceDate.setHours(0, 0, 0, 0);
+      return priceDate.getTime() === today.getTime();
+    });
+
+    return todayPrice || null;
+  };
+  const renderOrganizationCard = ({ item }: { item: Organization }) => {
+    const latestPrice = getLatestPrice(item.price);
 
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -81,22 +87,23 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
 
     return (
       <View className="bg-white p-4 mb-3 rounded-lg shadow-sm">
-        {/* Header with Name and Price */}
         <View className="flex-row justify-between items-center mb-2">
           <Text className="text-lg font-pbold text-primary">{item.name}</Text>
-          {latestPrice && (
-            <Text className="text-base font-pmedium text-secondary">
-              ₱{latestPrice.price.toFixed(2)}/kg
-            </Text>
-          )}
+          <Text className="text-base font-pmedium text-secondary">
+            ₱{latestPrice ? latestPrice.price.toFixed(2) : "0.00"}/kg
+          </Text>
         </View>
 
-        {/* Address */}
         <Text className="text-gray-600 text-sm mb-2 font-pregular">
           {item.address}
         </Text>
 
-        {/* Verification Status and Creation Date */}
+        {item.distance !== undefined && (
+          <Text className="text-primary text-sm font-pmedium mb-2">
+            {item.distance.toFixed(1)} km away
+          </Text>
+        )}
+
         <View className="flex-row justify-between items-center mb-2">
           <View className="flex-row items-center">
             <View
@@ -113,7 +120,6 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
           </Text>
         </View>
 
-        {/* Market Price Info */}
         {latestPrice && latestPrice.market_price > 0 && (
           <View className="mt-2 bg-gray-50 p-2 rounded">
             <Text className="text-xs text-gray-500">
@@ -122,15 +128,6 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
           </View>
         )}
 
-        {/* Location Coordinates */}
-        {item.geolocation && (
-          <Text className="text-xs text-gray-400 mt-2">
-            📍 {item.geolocation.latitude.toFixed(4)},{" "}
-            {item.geolocation.longitude.toFixed(4)}
-          </Text>
-        )}
-
-        {/* Action Buttons */}
         <View className="flex-row justify-between mt-4 space-x-2">
           <TouchableOpacity
             onPress={() => onOrganizationSelect(item)}
@@ -160,6 +157,8 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
     );
   };
 
+  if (!visible) return null;
+
   return (
     <BottomSheet
       snapPoints={snapPoints}
@@ -180,7 +179,7 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
 
         <BottomSheetFlatList
           data={organizations}
-          keyExtractor={(item: Organization) => item.id}
+          keyExtractor={(item) => item.id}
           renderItem={renderOrganizationCard}
           contentContainerStyle={{
             paddingBottom: 20,

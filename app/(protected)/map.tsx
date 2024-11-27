@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   View,
   TouchableOpacity,
@@ -17,19 +17,7 @@ import * as Location from "expo-location";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import OrganizationBottomSheet from "@/components/BottomSheet";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-
-// Interfaces
-interface ListViewMill {
-  id: string;
-  name: string;
-  location: string;
-  contact: string;
-  distance: string;
-  image: string;
-  rating: number;
-  status: "Open" | "Closed";
-  operatingHours: string;
-}
+import { calculateDistance } from "@/lib/distanceCalculator";
 
 interface Geolocation {
   id: string;
@@ -51,13 +39,14 @@ interface Organization {
   address: string;
   accessCode: string;
   createdAt: string;
-  updatedAt: string;
+  updatedAt: string; // Add this
   permit: string | null;
   isVerified: boolean;
-  geolocationId: string | null;
-  creatorId: string;
+  geolocationId: string | null; // Add this
+  creatorId: string; // Add this
   geolocation: Geolocation;
   price: Price[];
+  distance?: number;
 }
 
 interface LocationData {
@@ -69,6 +58,13 @@ interface LocationData {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
 
+const PHILIPPINES_BOUNDS = {
+  latitudeDelta: 16.5,
+  longitudeDelta: 14,
+  latitude: 12.8797,
+  longitude: 121.774,
+};
+
 const MapScreen = () => {
   const { authState } = useAuth();
   const mapRef = useRef<MapView>(null);
@@ -79,13 +75,6 @@ const MapScreen = () => {
   const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredMills, setFilteredMills] = useState<Organization[]>([]);
-
-  const initialRegion = {
-    latitude: 14.5995,
-    longitude: 120.9842,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
-  };
 
   useEffect(() => {
     (async () => {
@@ -99,8 +88,22 @@ const MapScreen = () => {
         accuracy: Location.Accuracy.Highest,
       });
       setUserLocation(location as LocationData);
+
+      // Update oil mills with distance when location is available
+      if (oilMills.length > 0) {
+        const millsWithDistance = oilMills.map((mill) => ({
+          ...mill,
+          distance: calculateDistance(
+            location.coords.latitude,
+            location.coords.longitude,
+            mill.geolocation.latitude,
+            mill.geolocation.longitude
+          ),
+        }));
+        setFilteredMills(millsWithDistance);
+      }
     })();
-  }, []);
+  }, [oilMills]);
 
   useEffect(() => {
     const fetchOilMills = async () => {
@@ -129,90 +132,39 @@ const MapScreen = () => {
     }
   }, [authState?.accessToken]);
 
-  const CustomMarker = ({
-    isSelected,
-    name,
-    price,
-  }: {
-    isSelected: boolean;
-    name: string;
-    price?: number;
-  }) => (
-    <View>
-      <View
-        className={`items-center justify-center ${
-          isSelected ? "bg-primary" : "bg-white"
-        }`}
-        style={styles.markerContainer}
-      >
-        <MaterialCommunityIcons
-          name="store"
-          size={20}
-          color={isSelected ? "#FFFFFF" : "#59A60E"}
-        />
-        <Text
-          className={`text-[10px] font-pbold ${
-            isSelected ? "text-white" : "text-primary"
-          }`}
-          numberOfLines={1}
-        >
-          {name}
-        </Text>
-        {price && (
-          <Text
-            className={`text-[9px] ${
-              isSelected ? "text-white" : "text-primary"
-            }`}
-          >
-            ₱{price.toFixed(2)}
-          </Text>
-        )}
-      </View>
-      <View
-        className={`w-2 h-2 rotate-45 ${
-          isSelected ? "bg-primary" : "bg-white"
-        } self-center -mt-1`}
-        style={styles.markerArrow}
-      />
-    </View>
+  const handleSearch = useCallback(
+    (text: string) => {
+      setSearchQuery(text);
+
+      if (!text.trim()) {
+        setFilteredMills(oilMills);
+        return;
+      }
+
+      const filtered = oilMills.filter(
+        (mill) =>
+          mill.name.toLowerCase().includes(text.toLowerCase()) ||
+          mill.address.toLowerCase().includes(text.toLowerCase())
+      );
+
+      setFilteredMills(filtered);
+
+      if (filtered.length > 0 && !isListView && mapRef.current) {
+        mapRef.current.animateToRegion({
+          latitude: filtered[0].geolocation.latitude,
+          longitude: filtered[0].geolocation.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+      }
+    },
+    [oilMills, isListView]
   );
-  // Update the search handler function
-  const handleSearch = (text: string) => {
-    setSearchQuery(text);
 
-    if (!text.trim()) {
-      setFilteredMills(oilMills); // Show all mills when search is empty
-      return;
-    }
-
-    // Filter mills based on search query
-    const filtered = oilMills.filter(
-      (mill) =>
-        mill.name.toLowerCase().includes(text.toLowerCase()) ||
-        mill.address.toLowerCase().includes(text.toLowerCase())
-    );
-
-    setFilteredMills(filtered);
-
-    // If there are filtered results and we're in map view, animate to the first result
-    if (filtered.length > 0 && !isListView && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: filtered[0].geolocation.latitude,
-        longitude: filtered[0].geolocation.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    }
-  };
-  useEffect(() => {
-    setFilteredMills(oilMills);
-  }, [oilMills]);
-
-  const handleMarkerPress = (mill: Organization) => {
+  const handleMarkerPress = useCallback((mill: Organization) => {
     setSelectedMill(mill);
     setIsBottomSheetVisible(true);
 
-    // Animate to selected marker
     if (mill.geolocation && mapRef.current) {
       mapRef.current.animateToRegion({
         latitude: mill.geolocation.latitude,
@@ -221,14 +173,14 @@ const MapScreen = () => {
         longitudeDelta: 0.01,
       });
     }
-  };
+  }, []);
 
-  const handleCloseBottomSheet = () => {
+  const handleCloseBottomSheet = useCallback(() => {
     setIsBottomSheetVisible(false);
     setSelectedMill(null);
-  };
+  }, []);
 
-  const handleOrganizationSelect = (organization: Organization) => {
+  const handleOrganizationSelect = useCallback((organization: Organization) => {
     if (organization.geolocation && mapRef.current) {
       mapRef.current.animateToRegion({
         latitude: organization.geolocation.latitude,
@@ -237,50 +189,66 @@ const MapScreen = () => {
         longitudeDelta: 0.01,
       });
     }
-  };
+  }, []);
 
-  const transformToListViewMills = (orgs: Organization[]): ListViewMill[] => {
-    return orgs.map((org) => ({
-      id: org.id,
-      name: org.name,
-      location: org.address,
-      contact: "N/A",
-      distance: "N/A",
-      image: "",
-      rating: 0,
-      status: "Open" as const,
-      operatingHours: "9:00 AM - 5:00 PM",
-    }));
-  };
+  const CustomMarker = useCallback(
+    ({ isSelected, name }: { isSelected: boolean; name: string }) => (
+      <View>
+        <View
+          className={`items-center justify-center ${
+            isSelected ? "bg-primary" : "bg-white"
+          }`}
+          style={styles.markerContainer}
+        >
+          <MaterialCommunityIcons
+            name="store"
+            size={20}
+            color={isSelected ? "#FFFFFF" : "#59A60E"}
+          />
+          <Text
+            className={`text-[10px] font-pbold ${
+              isSelected ? "text-white" : "text-primary"
+            }`}
+            numberOfLines={1}
+          >
+            {name}
+          </Text>
+        </View>
+        <View
+          className={`w-2 h-2 rotate-45 ${
+            isSelected ? "bg-primary" : "bg-white"
+          } self-center -mt-1`}
+          style={styles.markerArrow}
+        />
+      </View>
+    ),
+    []
+  );
 
-  const renderMarker = (mill: Organization) => {
-    const isSelected = selectedMill?.id === mill.id;
-    const latestPrice =
-      mill.price && mill.price.length > 0
-        ? mill.price.reduce((latest, current) =>
-            new Date(current.date) > new Date(latest.date) ? current : latest
-          )
-        : null;
-
-    return (
-      <Marker
-        key={mill.id}
-        coordinate={{
-          latitude: mill.geolocation.latitude,
-          longitude: mill.geolocation.longitude,
-        }}
-        onPress={() => handleMarkerPress(mill)}
-        tracksViewChanges={false}
-      >
-        <CustomMarker isSelected={isSelected} name={mill.name} />
-      </Marker>
-    );
-  };
+  const renderMarker = useCallback(
+    (mill: Organization) => {
+      const isSelected = selectedMill?.id === mill.id;
+      return (
+        <Marker
+          key={mill.id}
+          coordinate={{
+            latitude: mill.geolocation.latitude,
+            longitude: mill.geolocation.longitude,
+          }}
+          onPress={() => handleMarkerPress(mill)}
+          tracksViewChanges={false}
+        >
+          <CustomMarker isSelected={isSelected} name={mill.name} />
+        </Marker>
+      );
+    },
+    [selectedMill, handleMarkerPress, CustomMarker]
+  );
 
   if (isListView) {
     return (
       <ListView
-        oilMills={transformToListViewMills(filteredMills)}
+        oilMills={filteredMills}
         onSwitchView={() => setIsListView(false)}
       />
     );
@@ -293,7 +261,9 @@ const MapScreen = () => {
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={{ width: screenWidth, height: screenHeight }}
-          initialRegion={initialRegion}
+          initialRegion={PHILIPPINES_BOUNDS}
+          minZoomLevel={6}
+          maxZoomLevel={18}
           showsUserLocation={true}
           showsMyLocationButton={true}
         >
@@ -319,7 +289,6 @@ const MapScreen = () => {
 
         <SafeAreaView className="flex-1 absolute top-0 left-0 right-0">
           <View className="flex-row items-center space-x-2 px-4 py-2 mx-4 mt-2">
-            {/* Search Bar */}
             <View className="flex-1 flex-row items-center bg-white rounded-lg px-3 py-2 shadow-sm">
               <MaterialCommunityIcons
                 name="magnify"
@@ -335,7 +304,6 @@ const MapScreen = () => {
               />
             </View>
 
-            {/* List View Toggle Button */}
             <TouchableOpacity
               onPress={() => setIsListView(true)}
               className="bg-white p-2 rounded-lg shadow-sm"
@@ -349,13 +317,12 @@ const MapScreen = () => {
           </View>
         </SafeAreaView>
 
-        {isBottomSheetVisible && selectedMill && (
-          <OrganizationBottomSheet
-            organizations={[selectedMill]}
-            onOrganizationSelect={handleOrganizationSelect}
-            onClose={handleCloseBottomSheet}
-          />
-        )}
+        <OrganizationBottomSheet
+          visible={isBottomSheetVisible}
+          organizations={selectedMill ? [selectedMill] : []}
+          onOrganizationSelect={handleOrganizationSelect}
+          onClose={handleCloseBottomSheet}
+        />
       </View>
     </GestureHandlerRootView>
   );
@@ -371,8 +338,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    width: 50, // Fixed width
-    height: 50, // Fixed height
+    width: 60,
+    height: 60,
     borderRadius: 8,
     padding: 4,
   },
@@ -387,36 +354,5 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
 });
-
-const mapStyle = [
-  {
-    featureType: "poi",
-    elementType: "labels",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "transit",
-    elementType: "labels",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "landscape",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#f5f5f5",
-      },
-    ],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [
-      {
-        color: "#e9e9e9",
-      },
-    ],
-  },
-];
 
 export default MapScreen;
