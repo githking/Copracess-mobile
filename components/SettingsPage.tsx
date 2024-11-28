@@ -10,7 +10,9 @@ import { useAuth } from "@/context/AuthContext";
 const SettingsPage = () => {
   const [isLogoutModalVisible, setIsLogoutModalVisible] = useState(false);
   const router = useRouter();
-  const { onLogout } = useAuth();
+  const { onLogout, authState } = useAuth();
+
+  const isCopraOwner = authState?.data.role === "COPRA_BUYER";
 
   const handleLogoutPress = () => {
     setIsLogoutModalVisible(true);
@@ -26,7 +28,6 @@ const SettingsPage = () => {
       try {
         setIsLogoutModalVisible(false);
         await onLogout();
-
         router.replace("/signIn");
       } catch (error) {
         console.error("Error signing out:", error);
@@ -46,13 +47,22 @@ const SettingsPage = () => {
         </View>
         <View className="items-center mb-4">
           <View className="w-24 h-24 bg-primary rounded-full justify-center items-center mb-1">
-            <Image
-              source={icons.profile}
-              className="w-14 h-14"
-              tintColor="white"
-            />
+            {authState?.data.image ? (
+              <Image
+                source={{ uri: authState.data.image }}
+                className="w-24 h-24 rounded-full"
+              />
+            ) : (
+              <Image
+                source={icons.profile}
+                className="w-14 h-14"
+                tintColor="white"
+              />
+            )}
           </View>
-          <Text className="text-lg font-psemibold">Name</Text>
+          <Text className="text-lg font-psemibold">
+            {authState?.data.name || "Name"}
+          </Text>
         </View>
 
         <TouchableOpacity
@@ -71,21 +81,23 @@ const SettingsPage = () => {
           <FontAwesome name="angle-right" size={24} color="#59A60E" />
         </TouchableOpacity>
 
-        <TouchableOpacity
-          className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4"
-          onPress={() => router.push("/organization")}
-        >
-          <View className="flex-row items-center">
-            <FontAwesome
-              name="building"
-              size={20}
-              color="#59A60E"
-              style={{ marginRight: 10 }}
-            />
-            <Text className="text-lg font-pregular">Organization</Text>
-          </View>
-          <FontAwesome name="angle-right" size={24} color="#59A60E" />
-        </TouchableOpacity>
+        {!isCopraOwner && (
+          <TouchableOpacity
+            className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4"
+            onPress={() => router.push("/organization")}
+          >
+            <View className="flex-row items-center">
+              <FontAwesome
+                name="building"
+                size={20}
+                color="#59A60E"
+                style={{ marginRight: 10 }}
+              />
+              <Text className="text-lg font-pregular">Organization</Text>
+            </View>
+            <FontAwesome name="angle-right" size={24} color="#59A60E" />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           className="bg-white flex-row items-center justify-between py-3 border border-primary rounded-md mb-2 px-4"

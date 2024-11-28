@@ -16,10 +16,14 @@ interface AuthProps {
       image?: string | null;
       role: string | null;
       organizationId?: string | null;
+      isActive?: boolean;
+      emailVerified?: string | null;
+      position: string | null;
+      isTwoFactorEnabled: boolean; // Add this field
     };
   };
   onLogin?: (email: string, password: string) => Promise<any>;
-  onLogout?: () => Promise<any>;
+  onLogout?: () => Promise<void>;
 }
 
 interface ApiError extends Error {
@@ -56,6 +60,10 @@ export const AuthProvider = ({ children }: any) => {
       image?: string | null;
       role: string | null;
       organizationId?: string | null;
+      isActive?: boolean;
+      emailVerified?: string | null;
+      position: string | null; // Add position field
+      isTwoFactorEnabled: false;
     };
   }>({
     accessToken: null,
@@ -68,6 +76,10 @@ export const AuthProvider = ({ children }: any) => {
       image: null,
       role: null,
       organizationId: null,
+      isActive: undefined,
+      emailVerified: null,
+      position: null, // Add position field
+      isTwoFactorEnabled: false,
     },
   });
 
@@ -126,46 +138,44 @@ export const AuthProvider = ({ children }: any) => {
   const login = async (email: string, password: string) => {
     try {
       console.log("Attempting login...");
-
-      // Clear any existing auth headers
       delete axios.defaults.headers.common["Authorization"];
 
       const response = await axios.post(`/auth`, { email, password });
       console.log("Login successful");
 
-      const { accessToken, refreshToken } = response.data;
-
+      const { accessToken, refreshToken } = response.data.tokens;
+      const userData = response.data.user;
       const decoded: any = jwtDecode(accessToken);
-      const userData = {
-        id: decoded.id,
-        email: decoded.email,
-        name: decoded.name,
-        image: decoded.image,
-        role: decoded.role,
-        organizationId: decoded.organizationId,
+
+      const completeUserData = {
+        id: userData.id || decoded.id,
+        email: userData.email || decoded.email,
+        name: userData.name || decoded.name,
+        image: userData.image || decoded.image,
+        role: userData.role || decoded.role,
+        organizationId: userData.organizationId || decoded.organizationId,
+        isActive: userData.isActive,
+        emailVerified: userData.emailVerified,
+        position: userData.position,
+        isTwoFactorEnabled: userData.isTwoFactorEnabled || false, // Add this field
       };
 
-      // Update state first
       setAuthState({
         accessToken,
         refreshToken,
         authenticated: true,
-        data: userData,
+        data: completeUserData,
       });
 
-      // Set axios default header
       axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
 
-      console.log(
-        "Setting auth header:",
-        axios.defaults.headers.common["Authorization"]
-      );
-
-      // Store tokens and user data
       await Promise.all([
         SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
         SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
-        SecureStore.setItemAsync(USER_DATA_KEY, JSON.stringify(userData)),
+        SecureStore.setItemAsync(
+          USER_DATA_KEY,
+          JSON.stringify(completeUserData)
+        ),
       ]);
 
       return response;
@@ -179,7 +189,7 @@ export const AuthProvider = ({ children }: any) => {
     try {
       console.log("Logging out...");
 
-      // Clear stored data
+      // Clear stored data first
       await Promise.all([
         SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
         SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
@@ -189,7 +199,7 @@ export const AuthProvider = ({ children }: any) => {
       // Clear axios headers
       delete axios.defaults.headers.common["Authorization"];
 
-      // Reset auth state
+      // Reset auth state last
       setAuthState({
         accessToken: null,
         refreshToken: null,
@@ -201,66 +211,70 @@ export const AuthProvider = ({ children }: any) => {
           image: null,
           role: null,
           organizationId: null,
+          isActive: undefined,
+          emailVerified: null,
+          position: null,
+          isTwoFactorEnabled: false,
         },
       });
 
+      // Navigate after state is cleared
       router.replace("/signIn");
     } catch (error) {
       console.error("Logout error:", error);
+      // Force navigation on error
+      router.replace("/signIn");
     }
   };
+
+  // In AuthContext.tsx
 
   const refreshAccessToken = async () => {
     try {
       const oldRefreshToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
 
       if (!oldRefreshToken) {
-        throw new Error("No refresh token found");
+        console.log("No refresh token found, logging out");
+        await logout();
+        return null;
       }
 
-      console.log("Starting token refresh");
-
-      // Make refresh request without auth header
-      const response = await axios.post(
-        `/auth/refresh`,
-        {
-          token: oldRefreshToken,
-        },
-        {
-          headers: { Authorization: undefined }, // Explicitly remove auth header for this request
-        }
-      );
+      const response = await axios.post(`/auth/refresh`, {
+        token: oldRefreshToken,
+      });
 
       const { accessToken, refreshToken } = response.data;
 
       if (!accessToken || !refreshToken) {
-        throw new Error("Invalid token response");
+        throw new Error("Missing tokens in response");
       }
 
-      // Set the new auth header immediately
-      axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+      // Decode new token to get updated user data
+      const decoded: any = jwtDecode(accessToken);
+      const updatedUserData = {
+        ...authState?.data,
+        isTwoFactorEnabled: decoded.isTwoFactorEnabled || false,
+      };
 
-      console.log(
-        "New auth header set:",
-        axios.defaults.headers.common["Authorization"]
-      );
-
-      // Update state
       setAuthState((prev) => ({
         ...prev,
         accessToken,
         refreshToken,
         authenticated: true,
+        data: updatedUserData,
       }));
 
-      // Store new tokens
       await Promise.all([
         SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
         SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
+        SecureStore.setItemAsync(
+          USER_DATA_KEY,
+          JSON.stringify(updatedUserData)
+        ),
       ]);
 
       return accessToken;
-    } catch (error: any) {
+    } catch (error) {
       console.error("Refresh token error:", error);
       await logout();
       return null;
