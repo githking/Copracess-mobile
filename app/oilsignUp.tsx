@@ -16,7 +16,7 @@ import FormField from "@/components/FormField";
 import CheckBox from "react-native-check-box";
 import { FontAwesome } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import cld from "@/lib/cloudinary";
+import cld, { uploadToCloudinary } from "@/lib/cloudinary";
 import axios from "axios";
 
 import { upload } from "cloudinary-react-native";
@@ -43,50 +43,27 @@ const oilsignUp = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled) {
-      setPermitImage(result.assets[0].uri);
-    }
-  };
-
-  type UploadImageResponse = string | null;
-
-  const uploadImage = async (): Promise<UploadImageResponse> => {
-    if (!permitImage) {
-      return null;
-    }
-
-    const options = {
-      upload_preset: "copracess",
-      unsigned: true,
-    };
-
-    return new Promise((resolve) => {
-      upload(cld, {
-        file: permitImage,
-        options: options,
-        callback: (error: any, response: any) => {
-          if (error) {
-            console.error("Upload error:", error);
-            resolve(null);
-          } else if (response) {
-            console.log(response);
-            resolve(response.url);
-          }
-        },
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
       });
-    });
+
+      if (!result.canceled && result.assets[0].uri) {
+        setPermitImage(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to select image");
+    }
   };
 
   const handleSubmit = async () => {
     setErrorMessage("");
 
+    // Validate form fields
     if (
       !form.firstname ||
       !form.middlename ||
@@ -99,53 +76,55 @@ const oilsignUp = () => {
       !form.password ||
       !form.username
     ) {
-      Alert.alert("error", "Please fill in all fields.");
+      Alert.alert("Error", "Please fill in all fields.");
       return;
     }
 
-    if (permitImage === null) {
-      Alert.alert(
-        "Please fill in all fields.",
-        "Please add a business permit."
-      );
+    if (!permitImage) {
+      Alert.alert("Required Field", "Please add a business permit.");
       return;
     }
 
     if (!agree) {
       Alert.alert(
-        "Please fill in all fields.",
-        "Please agree the terms and conditions."
+        "Terms Required",
+        "Please agree to the terms and conditions."
       );
       return;
     }
 
     setIsSubmitting(true);
 
-    const permitUrl = await uploadImage();
-    if (permitUrl === null) {
-      Alert.alert("Error", "Failed to upload business permit.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    const updatedForm = {
-      ...form,
-      permitUrl: permitUrl,
-    };
-
-    console.log("Updated form :", updatedForm);
-
     try {
+      // Upload permit to Cloudinary
+      const cloudinaryUrl = await uploadToCloudinary(permitImage);
+
+      if (!cloudinaryUrl) {
+        throw new Error("Failed to upload business permit");
+      }
+
+      const updatedForm = {
+        ...form,
+        permitUrl: cloudinaryUrl,
+      };
+
+      // Register user
       const response = await axios.post("/register", updatedForm);
-      console.log("Registration successful:", response.data);
+
       Alert.alert(
         "Success",
         "Registration successful! Please check your email for activation."
       );
+
+      router.push("/signIn");
     } catch (error) {
       console.error("Registration error:", error);
-      setErrorMessage("Registration failed. Please try again.");
-      Alert.alert("Error", "Registration failed. Please try again.");
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Registration failed. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
