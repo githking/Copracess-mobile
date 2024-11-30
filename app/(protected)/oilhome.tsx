@@ -5,8 +5,11 @@ import ChartSection from "../../components/HomeChart";
 import QueueSection from "../../components/QueueSection";
 import type { QueueItem } from "../../types/type";
 import axios from "axios";
+import { useRouter } from "expo-router";
 
 const OilHome = () => {
+    const router = useRouter();
+
     const chartTabs = [
         { key: "expense", label: "Expense" },
         { key: "weight", label: "Weight" },
@@ -16,22 +19,19 @@ const OilHome = () => {
         expense: { labels: [], datasets: [{ data: [] }] },
         weight: { labels: [], datasets: [{ data: [] }] },
     });
-
     const [chartSummaryData, setChartSummaryData] = useState({
         expense: [],
         weight: [],
     });
-
     const [unloadedTruckCount, setUnloadedTruckCount] = useState<number>(0);
     const [unloadedTruckCountLoading, setUnloadedTruckCountLoading] = useState<boolean>(true);
-
     const [queueData, setQueueData] = useState<QueueItem[]>([]);
-
     const [refreshing, setRefreshing] = useState(false);
 
     const onRefresh = () => {
         setRefreshing(true);
         fetchData();
+        fetchQueue();
         setRefreshing(false);
     };
 
@@ -39,8 +39,6 @@ const OilHome = () => {
         try {
             const response = await axios.get("/dashboard/oilhome");
             const { expense, weight, chartSummaryData, unloadedTruck } = response.data;
-
-            console.log("unloadedTruck,", unloadedTruck);
             setUnloadedTruckCount(unloadedTruck || 0);
             setUnloadedTruckCountLoading(false);
             setChartData({
@@ -54,12 +52,26 @@ const OilHome = () => {
         }
     };
 
+    const fetchQueue = async () => {
+        try {
+            const response = await axios.get("/queue");
+            console.log("Queue data:", response.data);
+            setQueueData(response.data.queue || []);
+        } catch (err: any) {
+            console.error("Error fetching queue:", err);
+            setQueueData([]);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     useEffect(() => {
         fetchData();
+        fetchQueue();
     }, []);
 
     const handleSeeAllPress = () => {
-        console.log("See all pressed");
+        router.replace("queue");
     };
 
     const handleQueueItemPress = (item: QueueItem) => {
