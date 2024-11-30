@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, StatusBar, Alert } from "react-native";
+import { View, ScrollView, StatusBar, Alert, RefreshControl } from "react-native";
 import SummaryCard from "../../components/SummaryCard";
 import ChartSection from "../../components/HomeChart";
 import QueueSection from "../../components/QueueSection";
@@ -22,13 +22,27 @@ const OilHome = () => {
         weight: [],
     });
 
+    const [unloadedTruckCount, setUnloadedTruckCount] = useState<number>(0);
+    const [unloadedTruckCountLoading, setUnloadedTruckCountLoading] = useState<boolean>(true);
+
     const [queueData, setQueueData] = useState<QueueItem[]>([]);
+
+    const [refreshing, setRefreshing] = useState(false);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+        setRefreshing(false);
+    };
 
     const fetchData = async () => {
         try {
             const response = await axios.get("/dashboard/oilhome");
-            const { expense, weight, chartSummaryData } = response.data;
+            const { expense, weight, chartSummaryData, unloadedTruck } = response.data;
 
+            console.log("unloadedTruck,", unloadedTruck);
+            setUnloadedTruckCount(unloadedTruck || 0);
+            setUnloadedTruckCountLoading(false);
             setChartData({
                 expense: expense,
                 weight: weight,
@@ -54,7 +68,8 @@ const OilHome = () => {
 
     return (
         <View className="flex-1 bg-off-100">
-            <ScrollView>
+            <ScrollView
+                refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}>
                 <StatusBar barStyle="dark-content" />
                 <View className="px-4 pt-4">
                     <SummaryCard
@@ -62,17 +77,23 @@ const OilHome = () => {
                         items={[
                             {
                                 label: "TOTAL EXPENSE",
-                                value: "223,105",
-                                unit: "₱",
+                                value:
+                                    chartSummaryData.expense.length > 0
+                                        ? chartSummaryData.expense[0]["value"]
+                                        : "loading...",
                             },
                             {
                                 label: "TOTAL WEIGHT",
-                                value: "78",
-                                unit: "tons",
+                                value:
+                                    chartSummaryData.weight.length > 0
+                                        ? chartSummaryData.weight[0]["value"]
+                                        : "loading...",
                             },
                             {
                                 label: "UNLOADED TRUCKS",
-                                value: 13,
+                                value: unloadedTruckCountLoading
+                                    ? "loading..."
+                                    : unloadedTruckCount,
                             },
                         ]}
                     />
