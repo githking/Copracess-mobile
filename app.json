@@ -49,6 +49,14 @@
           "recordAudioAndroid": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "137216df-204e-4456-a235-9b6eb731d315"
+      }
+    }
   }
 }
