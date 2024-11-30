@@ -108,7 +108,6 @@ const CopraHome = () => {
                 refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}>
                 <StatusBar style="dark" />
                 <View className="px-4">
-                    {/* Summary Cards */}
                     <View className="pt-4">
                         <SummaryCard
                             title="TODAY'S SUMMARY"
