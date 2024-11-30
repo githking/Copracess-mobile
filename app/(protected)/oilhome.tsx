@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, StatusBar, Alert } from "react-native";
+import { View, ScrollView, StatusBar, Alert, RefreshControl } from "react-native";
 import SummaryCard from "../../components/SummaryCard";
 import ChartSection from "../../components/HomeChart";
 import QueueSection from "../../components/QueueSection";
 import type { QueueItem } from "../../types/type";
 import axios from "axios";
+import { useRouter } from "expo-router";
 
 const OilHome = () => {
+    const router = useRouter();
+
     const chartTabs = [
         { key: "expense", label: "Expense" },
         { key: "weight", label: "Weight" },
@@ -16,51 +19,28 @@ const OilHome = () => {
         expense: { labels: [], datasets: [{ data: [] }] },
         weight: { labels: [], datasets: [{ data: [] }] },
     });
-
     const [chartSummaryData, setChartSummaryData] = useState({
         expense: [],
         weight: [],
     });
-
+    const [unloadedTruckCount, setUnloadedTruckCount] = useState<number>(0);
+    const [unloadedTruckCountLoading, setUnloadedTruckCountLoading] = useState<boolean>(true);
     const [queueData, setQueueData] = useState<QueueItem[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
 
-    // Queue data
-    // const queueData: QueueItem[] = [
-    //   {
-    //     id: "1",
-    //     title: "John Smith",
-    //     subtitle: "10:30 AM",
-    //     status: "Arriving",
-    //     statusColor: "secondary",
-    //     icon: "person",
-    //     time: "10:30 AM",
-    //     plateNumber: "ABC123",
-    //     owner: "John Smith",
-    //     date: "2023-10-01",
-    //   },
-    //   {
-    //     id: "2",
-    //     title: "Mike Johnson",
-    //     subtitle: "11:00 AM",
-    //     status: "Queued",
-    //     statusColor: "primary",
-    //     icon: "person",
-    //     time: "11:00 AM",
-    //     plateNumber: "XYZ789",
-    //     owner: "Mike Johnson",
-    //     date: "2023-10-01",
-    //   },
-    // ];
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+        fetchQueue();
+        setRefreshing(false);
+    };
 
     const fetchData = async () => {
         try {
             const response = await axios.get("/dashboard/oilhome");
-            const { expense, weight, chartSummaryData } = response.data;
-
-            console.log("expense,", expense);
-            console.log("weight,", weight);
-            console.log("chartSummaryData,", chartSummaryData);
-
+            const { expense, weight, chartSummaryData, unloadedTruck } = response.data;
+            setUnloadedTruckCount(unloadedTruck || 0);
+            setUnloadedTruckCountLoading(false);
             setChartData({
                 expense: expense,
                 weight: weight,
@@ -72,12 +52,26 @@ const OilHome = () => {
         }
     };
 
+    const fetchQueue = async () => {
+        try {
+            const response = await axios.get("/queue");
+            console.log("Queue data:", response.data);
+            setQueueData(response.data.queue || []);
+        } catch (err: any) {
+            console.error("Error fetching queue:", err);
+            setQueueData([]);
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     useEffect(() => {
         fetchData();
+        fetchQueue();
     }, []);
 
     const handleSeeAllPress = () => {
-        console.log("See all pressed");
+        router.replace("queue");
     };
 
     const handleQueueItemPress = (item: QueueItem) => {
@@ -86,31 +80,36 @@ const OilHome = () => {
 
     return (
         <View className="flex-1 bg-off-100">
-            <ScrollView>
+            <ScrollView
+                refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}>
                 <StatusBar barStyle="dark-content" />
                 <View className="px-4 pt-4">
-                    {/* Summary Cards */}
                     <SummaryCard
                         title="TODAY'S SUMMARY"
                         items={[
                             {
                                 label: "TOTAL EXPENSE",
-                                value: "223,105",
-                                unit: "₱",
+                                value:
+                                    chartSummaryData.expense.length > 0
+                                        ? chartSummaryData.expense[0]["value"]
+                                        : "loading...",
                             },
                             {
                                 label: "TOTAL WEIGHT",
-                                value: "78",
-                                unit: "tons",
+                                value:
+                                    chartSummaryData.weight.length > 0
+                                        ? chartSummaryData.weight[0]["value"]
+                                        : "loading...",
                             },
                             {
                                 label: "UNLOADED TRUCKS",
-                                value: 13,
+                                value: unloadedTruckCountLoading
+                                    ? "loading..."
+                                    : unloadedTruckCount,
                             },
                         ]}
                     />
 
-                    {/* Chart Section */}
                     <View className="mt-4">
                         <ChartSection
                             tabs={chartTabs}
@@ -119,7 +118,6 @@ const OilHome = () => {
                         />
                     </View>
 
-                    {/* Queue Section */}
                     <View className="mt-4">
                         <QueueSection
                             title="Virtual Queue"
