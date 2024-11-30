@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import SummaryCard from "@/components/SummaryCard";
 import ChartSection from "@/components/HomeChart";
@@ -14,6 +14,11 @@ const CopraHome = () => {
         },
     });
 
+    const [totalTransaction, setTotalTransaction] = useState<number>(0);
+    const [averagePrice, setAveragePrice] = useState<number>(0);
+    const [dailyMarketPrice, setDailyMarketPrice] = useState<[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
+
     const [chartSummaryData, setChartSummaryData] = useState({
         expense_revenue: [
             { label: "Total Revenue", value: "₱0" },
@@ -21,12 +26,18 @@ const CopraHome = () => {
         ],
     });
 
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchRevenueData();
+        fetchTotalTrasaction();
+        fetchDailyMarketPrice();
+        setRefreshing(false);
+    };
+
     const fetchRevenueData = async () => {
         try {
             const response = await axios.get("/dashboard/coprahome");
             const { revenue } = response.data;
-            console.log("revenue", revenue);
-
             setChartData({
                 expense_revenue: {
                     labels: revenue.labels,
@@ -45,47 +56,40 @@ const CopraHome = () => {
         }
     };
 
+    const fetchTotalTrasaction = async () => {
+        try {
+            const response = await axios.get("/dashboard/coprahome/total-transaction");
+            const { totalTransaction } = response.data;
+            setTotalTransaction(totalTransaction);
+        } catch (error) {
+            console.error("Error fetching revenue data:", error);
+        }
+    };
+
+    const fetchDailyMarketPrice = async () => {
+        try {
+            const response = await axios.get("/dashboard/coprahome/daily-market-price");
+            const { prices, averageDailyPrice } = response.data;
+            console.log("averageDailyPrice, ", averageDailyPrice);
+            setDailyMarketPrice(prices);
+            setAveragePrice(averageDailyPrice);
+        } catch (error) {
+            console.error("Error fetching revenue data:", error);
+        }
+    };
+
     useEffect(() => {
         fetchRevenueData();
+        fetchTotalTrasaction();
+        fetchDailyMarketPrice();
     }, []);
-
-    const priceData = [
-        {
-            id: "1",
-            millName: "JTP Oil Mill",
-            price: "48.50",
-            subPrice: "47.75",
-        },
-        {
-            id: "2",
-            millName: "Tantangan Oil Mill",
-            price: "49.25",
-            subPrice: "48.50",
-        },
-        {
-            id: "3",
-            millName: "Mindanao Oil",
-            price: "47.75",
-            subPrice: "47.00",
-        },
-        {
-            id: "4",
-            millName: "South Cotabato Mill",
-            price: "48.75",
-            subPrice: "48.00",
-        },
-    ];
-
-    const handleViewAllPrices = () => {
-        console.log("View all prices pressed");
-    };
 
     return (
         <View className="flex-1 bg-off-100">
-            <ScrollView>
+            <ScrollView
+                refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}>
                 <StatusBar style="dark" />
                 <View className="px-4">
-                    {/* Summary Cards */}
                     <View className="pt-4">
                         <SummaryCard
                             title="TODAY'S SUMMARY"
@@ -97,13 +101,14 @@ const CopraHome = () => {
                                 },
                                 {
                                     label: "TOTAL TRANSACTIONS",
-                                    value: "78",
+                                    value: totalTransaction
+                                        ? totalTransaction.toString()
+                                        : "Loading ....",
                                 },
                             ]}
                         />
                     </View>
 
-                    {/* Chart Section */}
                     <View className="mt-4">
                         <ChartSection
                             tabs={[{ key: "expense_revenue", label: "Revenue" }]}
@@ -112,16 +117,16 @@ const CopraHome = () => {
                         />
                     </View>
 
-                    {/* Price Section */}
-                    <View className="mt-4">
-                        <PriceSection
-                            data={priceData}
-                            average="48.56"
-                            onViewAll={handleViewAllPrices}
-                        />
-                    </View>
-
-                    {/* Bottom Spacing */}
+                    {dailyMarketPrice ? (
+                        <View className="mt-4">
+                            <PriceSection
+                                data={dailyMarketPrice}
+                                average={averagePrice.toString()}
+                            />
+                        </View>
+                    ) : (
+                        "loading...."
+                    )}
                     <View className="h-4" />
                 </View>
             </ScrollView>
