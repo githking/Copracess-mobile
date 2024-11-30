@@ -29,10 +29,6 @@ const OilHome = () => {
             const response = await axios.get("/dashboard/oilhome");
             const { expense, weight, chartSummaryData } = response.data;
 
-            console.log("expense,", expense);
-            console.log("weight,", weight);
-            console.log("chartSummaryData,", chartSummaryData);
-
             setChartData({
                 expense: expense,
                 weight: weight,
@@ -61,7 +57,6 @@ const OilHome = () => {
             <ScrollView>
                 <StatusBar barStyle="dark-content" />
                 <View className="px-4 pt-4">
-                    {/* Summary Cards */}
                     <SummaryCard
                         title="TODAY'S SUMMARY"
                         items={[
@@ -82,7 +77,6 @@ const OilHome = () => {
                         ]}
                     />
 
-                    {/* Chart Section */}
                     <View className="mt-4">
                         <ChartSection
                             tabs={chartTabs}
@@ -91,7 +85,6 @@ const OilHome = () => {
                         />
                     </View>
 
-                    {/* Queue Section */}
                     <View className="mt-4">
                         <QueueSection
                             title="Virtual Queue"
