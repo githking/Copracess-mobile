@@ -24,34 +24,6 @@ const OilHome = () => {
 
     const [queueData, setQueueData] = useState<QueueItem[]>([]);
 
-    // Queue data
-    // const queueData: QueueItem[] = [
-    //   {
-    //     id: "1",
-    //     title: "John Smith",
-    //     subtitle: "10:30 AM",
-    //     status: "Arriving",
-    //     statusColor: "secondary",
-    //     icon: "person",
-    //     time: "10:30 AM",
-    //     plateNumber: "ABC123",
-    //     owner: "John Smith",
-    //     date: "2023-10-01",
-    //   },
-    //   {
-    //     id: "2",
-    //     title: "Mike Johnson",
-    //     subtitle: "11:00 AM",
-    //     status: "Queued",
-    //     statusColor: "primary",
-    //     icon: "person",
-    //     time: "11:00 AM",
-    //     plateNumber: "XYZ789",
-    //     owner: "Mike Johnson",
-    //     date: "2023-10-01",
-    //   },
-    // ];
-
     const fetchData = async () => {
         try {
             const response = await axios.get("/dashboard/oilhome");

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView } from "react-native";
+import { View, ScrollView, RefreshControl } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import SummaryCard from "@/components/SummaryCard";
 import ChartSection from "@/components/HomeChart";
@@ -14,12 +14,23 @@ const CopraHome = () => {
         },
     });
 
+    const [totalTransaction, setTotalTransaction] = useState<number>(0);
+    const [refreshing, setRefreshing] = useState(false);
+
     const [chartSummaryData, setChartSummaryData] = useState({
         expense_revenue: [
             { label: "Total Revenue", value: "₱0" },
             { label: "Average Revenue", value: "₱0" },
         ],
     });
+
+    const onRefresh = () => {
+        console.log("Manual refresh triggered");
+        setRefreshing(true);
+        fetchRevenueData();
+        fetchTotalTrasaction();
+        setRefreshing(false);
+    };
 
     const fetchRevenueData = async () => {
         try {
@@ -45,8 +56,19 @@ const CopraHome = () => {
         }
     };
 
+    const fetchTotalTrasaction = async () => {
+        try {
+            const response = await axios.get("/dashboard/coprahome/total-transaction");
+            const { totalTransaction } = response.data;
+            setTotalTransaction(totalTransaction);
+        } catch (error) {
+            console.error("Error fetching revenue data:", error);
+        }
+    };
+
     useEffect(() => {
         fetchRevenueData();
+        fetchTotalTrasaction();
     }, []);
 
     const priceData = [
@@ -82,7 +104,8 @@ const CopraHome = () => {
 
     return (
         <View className="flex-1 bg-off-100">
-            <ScrollView>
+            <ScrollView
+                refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}>
                 <StatusBar style="dark" />
                 <View className="px-4">
                     {/* Summary Cards */}
@@ -97,7 +120,9 @@ const CopraHome = () => {
                                 },
                                 {
                                     label: "TOTAL TRANSACTIONS",
-                                    value: "78",
+                                    value: totalTransaction
+                                        ? totalTransaction.toString()
+                                        : "Loading ....",
                                 },
                             ]}
                         />
