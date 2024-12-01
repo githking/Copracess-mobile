@@ -169,10 +169,7 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
       <View className="flex-1 px-4">
         <View className="flex-row justify-between items-center mb-4">
           <Text className="text-xl font-pbold">Oil Mills</Text>
-          <TouchableOpacity
-            onPress={onClose}
-            className="p-2 rounded-full bg-gray-100"
-          >
+          <TouchableOpacity onPress={onClose} className="p-2 ">
             <MaterialCommunityIcons name="close" size={20} color="#000000" />
           </TouchableOpacity>
         </View>

@@ -67,7 +67,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
             </Text>
             <TouchableOpacity
               onPress={onClose}
-              className="h-10 w-10 items-center justify-center bg-gray-100 rounded-full"
+              className="h-10 w-10 items-center justify-center"
             >
               <Ionicons name="close" size={24} color="#59A60E" />
             </TouchableOpacity>
