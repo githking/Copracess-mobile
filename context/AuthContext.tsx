@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { jwtDecode } from "jwt-decode";
@@ -65,6 +65,7 @@ const initialAuthState: AuthState = {
 
 const AuthContext = createContext<AuthProps>({});
 
+// Custom hook for using auth context
 export const useAuth = () => {
   return useContext(AuthContext);
 };

@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, ActivityIndicator } from "react-native";
-import { Tabs, useRouter, Stack } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import CustomHeader from "@/components/CustomHeader";
 import { TabIconProps } from "@/types/type";
 import { useAuth } from "@/context/AuthContext";
 import Routes from "@/constants/tabRoutes";
-
-const notificationCount = 3;
-const handleNotificationPress = () => {
-  console.log("Notification pressed");
-};
 
 const TabIcon = ({ icon, color, name, focused }: TabIconProps) => (
   <View className="items-center justify-center gap-2">
@@ -32,6 +27,7 @@ const TabsLayout = () => {
   const router = useRouter();
   const { authState } = useAuth();
   const [loading, setLoading] = useState(true);
+  const notificationCount = 3;
 
   useEffect(() => {
     if (!authState?.authenticated) {
@@ -45,20 +41,15 @@ const TabsLayout = () => {
     router.push("/settings");
   };
 
+  const handleNotificationPress = () => {
+    console.log("Notification pressed");
+  };
+
   if (loading) {
     return (
-      <>
-        <Stack.Screen
-          options={{
-            headerShown: false,
-          }}
-        />
-
-        {/* Place the content separately */}
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color="#59A60E" />
-        </View>
-      </>
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#59A60E" />
+      </View>
     );
   }
 
@@ -72,21 +63,10 @@ const TabsLayout = () => {
 
   return (
     <>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          headerShadowVisible: false,
-          headerStyle: {
-            backgroundColor: "white",
-          },
-          header: () => (
-            <CustomHeader
-              notificationCount={notificationCount}
-              onNotificationPress={handleNotificationPress}
-              onProfilePress={handleProfilePress}
-            />
-          ),
-        }}
+      <CustomHeader
+        notificationCount={notificationCount}
+        onNotificationPress={handleNotificationPress}
+        onProfilePress={handleProfilePress}
       />
 
       <Tabs
@@ -100,7 +80,7 @@ const TabsLayout = () => {
             borderTopColor: "#E5E5E5",
             height: 80,
           },
-          headerShown: false,
+          header: () => null, // Explicitly set header to null for tab screens
         }}
       >
         {tabScreens.map((screen) => (

@@ -48,6 +48,12 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
           "recordAudioAndroid": true
         }
+      ],
+      [
+        "react-native-auth0",
+        {
+          "domain": "dev-k6fuha822nowrnm0.jp.auth0.com"
+        }
       ]
     ],
     "extra": {

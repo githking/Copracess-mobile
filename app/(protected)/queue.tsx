@@ -1,3 +1,4 @@
+// app/(protected)/queue.tsx
 import React, { useState, useRef } from "react";
 import {
   View,

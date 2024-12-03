@@ -1,3 +1,4 @@
+// app/(auth)/roleSelect.tsx
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, Link } from "expo-router";

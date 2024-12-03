@@ -120,17 +120,10 @@ const transaction = () => {
                     <TransactionCard
                         transaction={item}
                         isEditMode={false}
-                        onPress={(transaction) =>
-                            handleTransactionPress(transaction)
-                        }
+                        onPress={() => handleTransactionPress(transaction)}
                     />
                 )}
-                refreshControl={
-                    <RefreshControl
-                        onRefresh={onRefresh}
-                        refreshing={refreshing}
-                    />
-                }
+                refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}
                 className="px-4 pb-24"
                 keyboardShouldPersistTaps="handled"
                 ListEmptyComponent={() => (
@@ -143,9 +136,7 @@ const transaction = () => {
                                     alt="No transaction found"
                                     resizeMode="contain"
                                 />
-                                <Text className="text-sm">
-                                    No transaction found
-                                </Text>
+                                <Text className="text-sm">No transaction found</Text>
                             </>
                         ) : (
                             <ActivityIndicator size="small" color="#59A60E" />
@@ -156,15 +147,11 @@ const transaction = () => {
                     <View className="pt-4">
                         <View className="flex flex-row items-center space-x-2 w-full">
                             <View className="flex-1 flex-row items-center">
-                                <SearchInput
-                                    icon={icons.search}
-                                    handlePress={() => {}}
-                                />
+                                <SearchInput icon={icons.search} handlePress={() => {}} />
                             </View>
                             <TouchableOpacity
                                 className="p-1.5 border border-primary bg-white rounded-md"
-                                onPress={handleOpenFilterModal}
-                            >
+                                onPress={handleOpenFilterModal}>
                                 <Image
                                     source={icons.filter}
                                     className="w-7 h-7"
