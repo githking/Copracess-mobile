@@ -128,8 +128,6 @@ const oilsignUp = () => {
                 },
             });
         });
-        console.log(uploadResponse.url);
-
         return uploadResponse.url;
     };
 
@@ -146,6 +144,11 @@ const oilsignUp = () => {
             !form.username
         ) {
             Alert.alert("Error", "Please fill in all fields.");
+            return;
+        }
+
+        if (form.password.length < 8) {
+            Alert.alert("Password Error", "Password must be at least 8 characters.");
             return;
         }
 
