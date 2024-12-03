@@ -15,11 +15,6 @@ const VirtualQueueHeader: React.FC<VirtualQueueHeaderProps> = ({
         <Text className="text-white text-xs font-psemibold uppercase">
           Virtual Queue #{queueNumber}
         </Text>
-        <TouchableOpacity className="bg-white rounded-xl p-1">
-          <Text className="text-primary text-xs font-pregular">
-            VIEW QR CODE
-          </Text>
-        </TouchableOpacity>
       </View>
       <View className="flex-row items-center">
         <View className="flex-1 border-r border-white/20">

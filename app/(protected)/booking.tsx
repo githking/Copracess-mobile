@@ -6,65 +6,229 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
-import BookingCalendar from "@/components/BookingCalendar";
-import { Picker } from "@react-native-picker/picker";
+import React, { useState, useEffect } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { FontAwesome } from "@expo/vector-icons";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
+
+import BookingCalendar from "@/components/BookingCalendar";
 import BookingHistorySidebar from "@/components/BookingSideBar";
+import SelectOilMillModal from "@/components/SelectMillModal";
 
-const dummyBookingHistory = [
-  {
-    id: "1",
-    destination: "Destination 1",
-    date: "2024-10-15",
-    weight: "5",
-    plateNumber: "ABC123",
-    status: "Completed",
-  },
-  {
-    id: "2",
-    destination: "Destination 2",
-    date: "2024-10-20",
-    weight: "3",
-    plateNumber: "XYZ789",
-    status: "Pending",
-  },
-  {
-    id: "3",
-    destination: "Destination 3",
-    date: "2024-10-25",
-    weight: "7",
-    plateNumber: "DEF456",
-    status: "In Progress",
-  },
-];
+interface Organization {
+  id: string;
+  name: string;
+  address: string;
+}
 
-const booking = () => {
+interface Booking {
+  id: string;
+  description: string;
+  copraBuyerId: string;
+  oilMillId: string;
+  estimatedWeight: number;
+  deliveryDate: string;
+  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  driver: string;
+  plateNumber: string;
+  verificationToken?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const BookingScreen = () => {
+  const params = useLocalSearchParams();
+  const { authState } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingHistory, setBookingHistory] = useState<Booking[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
-  const [destination, setDestination] = useState("");
-  const [weight, setWeight] = useState("");
-  const [plateNumber, setPlateNumber] = useState("");
+  const [oilMills, setOilMills] = useState<Organization[]>([]);
+  const [isLoadingOilMills, setIsLoadingOilMills] = useState(true);
   const [isHistorySidebarVisible, setIsHistorySidebarVisible] = useState(false);
+  const [isOilMillModalVisible, setIsOilMillModalVisible] = useState(false);
+  const [selectedOilMill, setSelectedOilMill] = useState<Organization | null>(
+    null
+  );
+  useEffect(() => {
+    if (params.organizationId && oilMills.length > 0) {
+      const selectedOrg = oilMills.find(
+        (mill) => mill.id === params.organizationId
+      );
+      if (selectedOrg) {
+        setSelectedOilMill(selectedOrg);
+        setForm((prev) => ({
+          ...prev,
+          oilMillId: selectedOrg.id,
+        }));
+      }
+    }
+  }, [params.organizationId, oilMills]);
+  const [form, setForm] = useState({
+    id: "",
+    description: "",
+    copraBuyerId: authState?.data.id || "",
+    oilMillId: "",
+    estimatedWeight: "",
+    deliveryDate: "",
+    status: "PENDING" as const,
+    driver: "",
+    plateNumber: "",
+    verificationToken: "",
+  });
 
-  const handleDateSelect = (date: string) => {
-    setSelectedDate(date);
+  useEffect(() => {
+    if (authState?.accessToken) {
+      fetchBookings();
+      fetchOilMills();
+    }
+  }, [authState?.accessToken]);
+
+  const fetchBookings = async () => {
+    try {
+      const response = await axios.get("/booking");
+      setBookingHistory(response.data.bookings);
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      Alert.alert("Error", "Failed to fetch booking history");
+    }
   };
 
-  const handleBook = () => {
-    console.log("Booking:", { selectedDate, destination, weight, plateNumber });
+  const fetchOilMills = async () => {
+    try {
+      const response = await axios.get("/map");
+      setOilMills(response.data.organizations);
+    } catch (error) {
+      console.error("Error fetching oil mills:", error);
+      Alert.alert("Error", "Failed to fetch oil mills");
+    } finally {
+      setIsLoadingOilMills(false);
+    }
+  };
+
+  const validateForm = () => {
+    if (!form.oilMillId?.trim()) {
+      Alert.alert("Error", "Please select an oil mill");
+      return false;
+    }
+    if (!form.deliveryDate?.trim()) {
+      Alert.alert("Error", "Please select a delivery date");
+      return false;
+    }
+    if (!form.estimatedWeight?.trim()) {
+      Alert.alert("Error", "Please enter the estimated weight");
+      return false;
+    }
+    if (!form.plateNumber?.trim()) {
+      Alert.alert("Error", "Please enter the plate number");
+      return false;
+    }
+    if (!form.driver?.trim()) {
+      Alert.alert("Error", "Please enter the driver name");
+      return false;
+    }
+    if (!form.description?.trim()) {
+      Alert.alert("Error", "Please enter a description");
+      return false;
+    }
+
+    const weight = parseFloat(form.estimatedWeight);
+    if (isNaN(weight) || weight <= 0) {
+      Alert.alert("Error", "Please enter a valid weight");
+      return false;
+    }
+
+    const deliveryDate = new Date(form.deliveryDate);
+    if (isNaN(deliveryDate.getTime())) {
+      Alert.alert("Error", "Invalid delivery date format");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleBook = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+
+      const bookingData = {
+        id: "",
+        description: form.description.trim(),
+        copraBuyerId: form.copraBuyerId,
+        oilMillId: form.oilMillId,
+        estimatedWeight: parseFloat(form.estimatedWeight),
+        deliveryDate: new Date(form.deliveryDate).toISOString(),
+        status: "PENDING" as const,
+        driver: form.driver.trim(),
+        plateNumber: form.plateNumber.trim().toUpperCase(),
+        verificationToken: "",
+      };
+      console.log("Booking data:", bookingData);
+      const response = await axios.post("/booking", bookingData, {
+        headers: {
+          Authorization: `Bearer ${authState?.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      Alert.alert("Success", "Booking created successfully");
+      await fetchBookings();
+      resetForm();
+    } catch (error: any) {
+      console.error("Booking error:", error.response?.data || error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.error || "Failed to create booking"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetForm = () => {
+    setForm({
+      id: "",
+      description: "",
+      copraBuyerId: authState?.data.id || "",
+      oilMillId: "",
+      estimatedWeight: "",
+      deliveryDate: "",
+      status: "PENDING",
+      driver: "",
+      plateNumber: "",
+      verificationToken: "",
+    });
+    setSelectedDate("");
+    setSelectedOilMill(null);
   };
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "No date selected";
     const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
+    return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    };
-    return date.toLocaleDateString("en-US", options);
+    });
   };
+
+  const handleDateSelect = (date: string) => {
+    setSelectedDate(date);
+    setForm((prev) => ({ ...prev, deliveryDate: date }));
+  };
+
+  if (isLoadingOilMills) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#59A60E" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-off-100">
@@ -81,6 +245,27 @@ const booking = () => {
           </TouchableOpacity>
         </View>
 
+        <View className="mb-4">
+          <Text className="text-lg font-psemibold mb-2">Select Oil Mill:</Text>
+          <TouchableOpacity
+            onPress={() => setIsOilMillModalVisible(true)}
+            className="border border-primary bg-white rounded-md p-3"
+          >
+            {selectedOilMill ? (
+              <>
+                <Text className="font-pmedium text-primary">
+                  {selectedOilMill.name}
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  {selectedOilMill.address}
+                </Text>
+              </>
+            ) : (
+              <Text className="text-gray-500">Select an oil mill</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
         <BookingCalendar onDateSelect={handleDateSelect} />
 
         <View className="mt-4 mb-4">
@@ -93,59 +278,95 @@ const booking = () => {
         </View>
 
         <View className="mb-4">
-          <Text className="text-lg font-psemibold mb-2">Destination:</Text>
-          <View className="border border-primary bg-white rounded-md overflow-hidden">
-            <Picker
-              selectedValue={destination}
-              onValueChange={(itemValue) => setDestination(itemValue)}
-              className="h-12 w-full bg-white font-pregular"
-            >
-              <Picker.Item label="Select a destination" value="" />
-              <Picker.Item label="Destination 1" value="destination1" />
-              <Picker.Item label="Destination 2" value="destination2" />
-              <Picker.Item label="Destination 3" value="destination3" />
-            </Picker>
-          </View>
+          <Text className="text-lg font-psemibold mb-2">Description:</Text>
+          <TextInput
+            value={form.description}
+            onChangeText={(text) =>
+              setForm((prev) => ({ ...prev, description: text }))
+            }
+            className="border border-primary bg-white rounded-md p-3 font-pregular"
+            placeholder="Enter delivery description"
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
         </View>
 
         <View className="mb-4">
           <Text className="text-lg font-psemibold mb-2">Weight (tons):</Text>
           <TextInput
-            value={weight}
-            onChangeText={setWeight}
-            keyboardType="numeric"
-            className="border border-primary bg-white rounded-md p-2 h-12 font-pregular"
-            placeholder="Enter weight"
+            value={form.estimatedWeight}
+            onChangeText={(text) =>
+              setForm((prev) => ({ ...prev, estimatedWeight: text }))
+            }
+            keyboardType="decimal-pad"
+            className="border border-primary bg-white rounded-md p-3 h-12 font-pregular"
+            placeholder="Enter estimated weight"
           />
         </View>
 
         <View className="mb-4">
           <Text className="text-lg font-psemibold mb-2">Plate Number:</Text>
           <TextInput
-            value={plateNumber}
-            onChangeText={setPlateNumber}
-            className="border border-primary bg-white rounded-md p-2 h-12 font-pregular"
+            value={form.plateNumber}
+            onChangeText={(text) =>
+              setForm((prev) => ({ ...prev, plateNumber: text.toUpperCase() }))
+            }
+            autoCapitalize="characters"
+            className="border border-primary bg-white rounded-md p-3 h-12 font-pregular"
             placeholder="Enter plate number"
+          />
+        </View>
+
+        <View className="mb-4">
+          <Text className="text-lg font-psemibold mb-2">Driver Name:</Text>
+          <TextInput
+            value={form.driver}
+            onChangeText={(text) =>
+              setForm((prev) => ({ ...prev, driver: text }))
+            }
+            className="border border-primary bg-white rounded-md p-3 h-12 font-pregular"
+            placeholder="Enter driver name"
           />
         </View>
 
         <TouchableOpacity
           onPress={handleBook}
-          className="bg-primary py-3 rounded-md mb-10"
+          disabled={isLoading}
+          className={`bg-primary py-3 rounded-md mb-10 ${
+            isLoading ? "opacity-50" : ""
+          }`}
         >
-          <Text className="text-white text-center text-lg font-pbold">
-            Book Delivery
-          </Text>
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center text-lg font-pbold">
+              Book Delivery
+            </Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
+
+      <SelectOilMillModal
+        visible={isOilMillModalVisible}
+        onClose={() => setIsOilMillModalVisible(false)}
+        onSelect={(mill) => {
+          setSelectedOilMill(mill);
+          setForm((prev) => ({ ...prev, oilMillId: mill.id }));
+        }}
+        organizations={oilMills}
+        selectedOrganization={selectedOilMill}
+        isLoading={isLoadingOilMills}
+      />
 
       <BookingHistorySidebar
         isVisible={isHistorySidebarVisible}
         onClose={() => setIsHistorySidebarVisible(false)}
-        bookingHistory={dummyBookingHistory}
+        bookingHistory={bookingHistory}
+        oilMills={oilMills} // Add this prop
       />
     </View>
   );
 };
 
-export default booking;
+export default BookingScreen;

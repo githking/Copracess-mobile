@@ -1,192 +1,230 @@
-import React, { useState } from "react";
+// VirtualQueueTable.tsx
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  Image,
-  FlatList,
-  Dimensions,
-  SafeAreaView,
+    View,
+    Text,
+    TouchableOpacity,
+    Image,
+    Alert,
+    FlatList,
+    ActivityIndicator,
+    RefreshControl,
+    SafeAreaView,
 } from "react-native";
-import { icons } from "../constants";
+import { icons, images } from "@/constants";
 import SearchInput from "./SearchInput";
 import FilterModal from "./FilterModal";
-import type { QueueItem, Filters } from "../types/type";
-
-const windowWidth = Dimensions.get("window").width;
-
-const Trucks: QueueItem[] = [
-  {
-    id: "246",
-    time: "10:38 am",
-    plateNumber: "ASD153",
-    owner: "Joshua Gonzales",
-    date: "4/9/2024",
-  },
-  {
-    id: "247",
-    time: "10:40 am",
-    plateNumber: "JHC765",
-    owner: "King Hezron",
-    date: "4/9/2024",
-  },
-  {
-    id: "248",
-    time: "10:45 am",
-    plateNumber: "ZAC103",
-    owner: "Bob Cano",
-    date: "4/9/2024",
-  },
-  {
-    id: "249",
-    time: "11:05 am",
-    plateNumber: "JAB809",
-    owner: "Christ David",
-    date: "4/9/2024",
-  },
-  {
-    id: "250",
-    time: "11:18 am",
-    plateNumber: "CLI098",
-    owner: "Lemuel Zaldua",
-    date: "4/9/2024",
-  },
-  {
-    id: "251",
-    time: "11:20 am",
-    plateNumber: "HAG721",
-    owner: "Joseph Laurel",
-    date: "4/9/2024",
-  },
-  {
-    id: "252",
-    time: "11:43 am",
-    plateNumber: "BAN571",
-    owner: "Kalisto Jade",
-    date: "4/9/2024",
-  },
-  {
-    id: "253",
-    time: "1:30 pm",
-    plateNumber: "KAU791",
-    owner: "Ken Bento",
-    date: "4/9/2024",
-  },
-  {
-    id: "254",
-    time: "1:36 pm",
-    plateNumber: "BAH112",
-    owner: "Richard Canto",
-    date: "4/9/2024",
-  },
-  {
-    id: "255",
-    time: "1:43 pm",
-    plateNumber: "POT612",
-    owner: "Rusty Balboa",
-    date: "4/9/2024",
-  },
-  {
-    id: "36",
-    time: "1:57 pm",
-    plateNumber: "KAU118",
-    owner: "Jester Yago",
-    date: "4/9/2024",
-  },
-];
+import type { VirtualQueueItem, Filters } from "@/types/type";
+import { useAuth } from "@/context/AuthContext";
+import axios from "axios";
+import AssessmentCard from "@/components/AssessmentCard";
+import AssessmentModal from "@/components/AssessmentModal";
+import { saveAssessment } from "@/services/assessment";
 
 const VirtualQueueFlatList: React.FC = () => {
-  const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [queue, setQueue] = useState<VirtualQueueItem[]>([]);
+    const [error, setError] = useState<string | null>(null);
+    const { authState } = useAuth();
 
-  const handleOpenFilterModal = () => {
-    setIsFilterModalVisible(true);
-  };
+    const fetchQueue = async () => {
+        if (!authState?.accessToken) {
+            setLoading(false);
+            setError("Authentication required");
+            return;
+        }
 
-  const handleCloseFilterModal = () => {
-    setIsFilterModalVisible(false);
-  };
+        try {
+            const response = await axios.get("/queue", {
+                headers: {
+                    Authorization: `Bearer ${authState.accessToken}`,
+                },
+            });
+            console.log("Queue data:", response.data);
+            setQueue(response.data.queue || []); // Ensure queue is always an array
+            setError(null);
+        } catch (err: any) {
+            console.error("Error fetching queue:", err);
+            setError(
+                err.response?.data?.details || "Failed to fetch queue data"
+            );
+            setQueue([]); // Reset queue on error
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
 
-  const handleApplyFilters = (filters: Filters) => {
-    console.log("Filters applied:", filters);
-    handleCloseFilterModal();
-  };
+    useEffect(() => {
+        fetchQueue();
+    }, [authState?.accessToken]);
 
-  const renderItem = ({ item, index }: { item: QueueItem; index: number }) => (
-    <View
-      className={`bg-white rounded-lg p-3 mb-2 flex-row ${
-        index === 0 ? "border-2 border-secondary-100" : ""
-      }`}
-    >
-      <View className="w-1/5 justify-center">
-        <Text className="text-lg font-bold text-primary">#{item.id}</Text>
-        <Text className="text-xs text-gray-500">{item.time}</Text>
-      </View>
-      <View className="w-2/5 justify-center">
-        <Text className="text-sm font-semibold">{item.owner}</Text>
-        <Text className="text-xs text-gray-500">{item.plateNumber}</Text>
-      </View>
-      <View className="w-2/5 items-end justify-center">
-        <Text className="text-sm">{item.date}</Text>
-        {index === 0 && (
-          <Text className="text-xs text-secondary-200 font-semibold">
-            Currently Unloading
-          </Text>
-        )}
-      </View>
-    </View>
-  );
+    const onRefresh = () => {
+        console.log("Manual refresh triggered");
+        setRefreshing(true);
+        fetchQueue();
+    };
 
-  const ListHeaderComponent = () => (
-    <>
-      <View className="flex-row items-center mb-4">
-        <View className="flex-1 mr-2">
-          <SearchInput icon={icons.search} handlePress={() => {}} />
+    const handleOpenFilterModal = () => {
+        setIsFilterModalVisible(true);
+    };
+
+    const handleCloseFilterModal = () => {
+        setIsFilterModalVisible(false);
+    };
+
+    const handleApplyFilters = (filters: Filters) => {
+        console.log("Filters applied:", filters);
+        handleCloseFilterModal();
+    };
+
+    const ListHeaderComponent = () => (
+        <View className="flex-row items-center mb-4">
+            <View className="flex-1 mr-2">
+                <SearchInput icon={icons.search} handlePress={() => {}} />
+            </View>
+            <TouchableOpacity
+                onPress={handleOpenFilterModal}
+                className="bg-white p-2 rounded"
+            >
+                <Image
+                    source={icons.filter}
+                    className="w-6 h-6"
+                    style={{ tintColor: "#59A60E" }}
+                />
+            </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={handleOpenFilterModal}
-          className="bg-white p-2 rounded"
-        >
-          <Image
-            source={icons.filter}
-            className="w-6 h-6"
-            style={{ tintColor: "#59A60E" }}
-          />
-        </TouchableOpacity>
-      </View>
-    </>
-  );
+    );
 
-  const ListFooterComponent = () => (
-    <View className="flex-row justify-between mt-4">
-      <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
-        <Text className="text-primary font-medium">PREVIOUS</Text>
-      </TouchableOpacity>
-      <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
-        <Text className="text-primary font-medium">NEXT</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    const ListEmptyComponent = () => (
+        <View className="flex flex-col items-center justify-center">
+            {!loading ? (
+                <>
+                    <Image
+                        source={images.empty}
+                        className="w-40 h-40"
+                        alt="No queue items found"
+                        resizeMode="contain"
+                    />
+                    <Text className="text-sm text-white my-5">
+                        {error || "No queue items found"}
+                    </Text>
+                </>
+            ) : (
+                <ActivityIndicator size="small" color="#59A60E" />
+            )}
+        </View>
+    );
 
-  return (
-    <SafeAreaView className="bg-primary flex-1 rounded-lg">
-      <FlatList
-        data={Trucks}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={ListHeaderComponent}
-        ListFooterComponent={ListFooterComponent}
-        contentContainerStyle={{ padding: 16 }}
-        showsVerticalScrollIndicator={false}
-        scrollEnabled={false}
-      />
+    const ListFooterComponent = () =>
+        queue.length > 0 ? (
+            <View className="flex-row justify-between mt-4">
+                <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
+                    <Text className="text-primary font-medium">PREVIOUS</Text>
+                </TouchableOpacity>
+                <TouchableOpacity className="bg-white rounded-lg px-6 py-2">
+                    <Text className="text-primary font-medium">NEXT</Text>
+                </TouchableOpacity>
+            </View>
+        ) : null;
 
-      <FilterModal
-        visible={isFilterModalVisible}
-        onClose={handleCloseFilterModal}
-        onApplyFilters={handleApplyFilters}
-      />
-    </SafeAreaView>
-  );
+    const [isAssessmentModalVisible, setIsAssessmentModalVisible] =
+        useState(false);
+    const [selectedItem, setSelectedItem] = useState<VirtualQueueItem | null>(
+        null
+    );
+
+    const handleCardPress = (item: VirtualQueueItem) => {
+        setSelectedItem(item);
+        setIsAssessmentModalVisible(true);
+    };
+
+    const handleCloseAssessmentModal = () => {
+        setIsAssessmentModalVisible(false);
+        setSelectedItem(null);
+    };
+
+    const handleSaveAssessment = async (details: {
+        actualWeight: string;
+        moistureContent: string;
+        qualityGrade: string;
+    }) => {
+        if (!authState?.accessToken) {
+            console.error("No access token found");
+            Alert.alert("Error", "No access token found");
+            return;
+        }
+
+        if (!selectedItem) {
+            console.log("No selected item");
+            Alert.alert("Error", "No selected item");
+            return;
+        }
+        const { id, bookingId } = selectedItem;
+        const formData = {
+            bookingId: bookingId,
+            actualWeight: details.actualWeight,
+            moistureContent: details.moistureContent,
+            qualityGrade: details.qualityGrade,
+            oilMillId: authState.data.organizationId,
+        };
+
+        await saveAssessment(
+            formData,
+            authState.accessToken,
+            onRefresh,
+            handleCloseAssessmentModal
+        );
+    };
+
+    return (
+        <>
+            <SafeAreaView className="bg-primary flex-1 rounded-lg">
+                <FlatList
+                    data={queue}
+                    renderItem={({ item, index }) => (
+                        <AssessmentCard
+                            item={item}
+                            index={index}
+                            onPress={() => handleCardPress(item)}
+                        />
+                    )}
+                    keyExtractor={(item) => item.id.toString()}
+                    ListHeaderComponent={ListHeaderComponent}
+                    ListFooterComponent={ListFooterComponent}
+                    ListEmptyComponent={ListEmptyComponent}
+                    contentContainerStyle={{ padding: 16 }}
+                    showsVerticalScrollIndicator={false}
+                    scrollEnabled={true}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            colors={["#59A60E"]} // Android
+                            tintColor="#59A60E" // iOS
+                        />
+                    }
+                />
+
+                <FilterModal
+                    visible={isFilterModalVisible}
+                    onClose={handleCloseFilterModal}
+                    onApplyFilters={handleApplyFilters}
+                />
+            </SafeAreaView>
+
+            {selectedItem && (
+                <AssessmentModal
+                    visible={isAssessmentModalVisible}
+                    item={selectedItem}
+                    onClose={handleCloseAssessmentModal}
+                    onSave={handleSaveAssessment}
+                />
+            )}
+        </>
+    );
 };
 
 export default VirtualQueueFlatList;

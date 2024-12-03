@@ -1,136 +1,138 @@
-// app/(protected)/oilhome.tsx
-
-import React from "react";
-import { View, ScrollView, StatusBar } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, ScrollView, StatusBar, Alert, RefreshControl } from "react-native";
 import SummaryCard from "../../components/SummaryCard";
 import ChartSection from "../../components/HomeChart";
 import QueueSection from "../../components/QueueSection";
 import type { QueueItem } from "../../types/type";
+import axios from "axios";
+import { useRouter } from "expo-router";
 
 const OilHome = () => {
-  // Chart configuration
-  const chartTabs = [
-    { key: "expense", label: "Expense" },
-    { key: "weight", label: "Weight" },
-  ];
+    const router = useRouter();
 
-  const chartData = {
-    expense: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      datasets: [
-        {
-          data: [420000, 457400, 495400, 480000, 450000, 470000, 490000],
-        },
-      ],
-    },
-    weight: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      datasets: [
-        {
-          data: [85, 95, 65, 90, 75, 85, 88],
-        },
-      ],
-    },
-  };
+    const chartTabs = [
+        { key: "expense", label: "Expense" },
+        { key: "weight", label: "Weight" },
+    ];
 
-  const chartSummaryData = {
-    expense: [
-      { label: "Total expense", value: "₱3,202,200" },
-      { label: "Average expense", value: "₱457,300" },
-    ],
-    weight: [
-      { label: "Total weight", value: "748 TONS" },
-      { label: "Average weight", value: "103 TONS" },
-    ],
-  };
+    const [chartData, setChartData] = useState({
+        expense: { labels: [], datasets: [{ data: [] }] },
+        weight: { labels: [], datasets: [{ data: [] }] },
+    });
+    const [chartSummaryData, setChartSummaryData] = useState({
+        expense: [],
+        weight: [],
+    });
+    const [unloadedTruckCount, setUnloadedTruckCount] = useState<number>(0);
+    const [unloadedTruckCountLoading, setUnloadedTruckCountLoading] = useState<boolean>(true);
+    const [queueData, setQueueData] = useState<QueueItem[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
 
-  // Queue data
-  const queueData: QueueItem[] = [
-    {
-      id: "1",
-      title: "John Smith",
-      subtitle: "10:30 AM",
-      status: "Arriving",
-      statusColor: "secondary",
-      icon: "person",
-      time: "10:30 AM",
-      plateNumber: "ABC123",
-      owner: "John Smith",
-      date: "2023-10-01",
-    },
-    {
-      id: "2",
-      title: "Mike Johnson",
-      subtitle: "11:00 AM",
-      status: "Queued",
-      statusColor: "primary",
-      icon: "person",
-      time: "11:00 AM",
-      plateNumber: "XYZ789",
-      owner: "Mike Johnson",
-      date: "2023-10-01",
-    },
-  ];
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchData();
+        fetchQueue();
+        setRefreshing(false);
+    };
 
-  const handleSeeAllPress = () => {
-    console.log("See all pressed");
-  };
+    const fetchData = async () => {
+        try {
+            const response = await axios.get("/dashboard/oilhome");
+            const { expense, weight, chartSummaryData, unloadedTruck } = response.data;
+            setUnloadedTruckCount(unloadedTruck || 0);
+            setUnloadedTruckCountLoading(false);
+            setChartData({
+                expense: expense,
+                weight: weight,
+            });
+            setChartSummaryData(chartSummaryData);
+        } catch (error) {
+            console.error("Error fetching oil home data:", error);
+            Alert.alert("Error", "Failed to fetch data from the server.");
+        }
+    };
 
-  const handleQueueItemPress = (item: QueueItem) => {
-    console.log("Queue item pressed:", item);
-  };
+    const fetchQueue = async () => {
+        try {
+            const response = await axios.get("/queue");
+            console.log("Queue data:", response.data);
+            setQueueData(response.data.queue || []);
+        } catch (err: any) {
+            console.error("Error fetching queue:", err);
+            setQueueData([]);
+        } finally {
+            setRefreshing(false);
+        }
+    };
 
-  return (
-    <View className="flex-1 bg-off-100">
-      <ScrollView>
-        <StatusBar barStyle="dark-content" />
-        <View className="px-4 pt-4">
-          {/* Summary Cards */}
-          <SummaryCard
-            title="TODAY'S SUMMARY"
-            items={[
-              {
-                label: "TOTAL EXPENSE",
-                value: "223,105",
-                unit: "₱",
-              },
-              {
-                label: "TOTAL WEIGHT",
-                value: "78",
-                unit: "tons",
-              },
-              {
-                label: "UNLOADED TRUCKS",
-                value: 13,
-              },
-            ]}
-          />
+    useEffect(() => {
+        fetchData();
+        fetchQueue();
+    }, []);
 
-          {/* Chart Section */}
-          <View className="mt-4">
-            <ChartSection
-              tabs={chartTabs}
-              chartData={chartData}
-              summaryData={chartSummaryData}
-            />
-          </View>
+    const handleSeeAllPress = () => {
+        router.replace("queue");
+    };
 
-          {/* Queue Section */}
-          <View className="mt-4">
-            <QueueSection
-              title="Virtual Queue"
-              data={queueData}
-              onSeeAllPress={handleSeeAllPress}
-              onItemPress={handleQueueItemPress}
-              showAvatar={true}
-              emptyStateText="No vehicles in queue"
-              seeAllText="View All"
-            />
-          </View>
+    const handleQueueItemPress = (item: QueueItem) => {
+        console.log("Queue item pressed:", item);
+    };
+
+    return (
+        <View className="flex-1 bg-off-100">
+            <ScrollView
+                refreshControl={<RefreshControl onRefresh={onRefresh} refreshing={refreshing} />}>
+                <StatusBar barStyle="dark-content" />
+                <View className="px-4 pt-4">
+                    <SummaryCard
+                        title="TODAY'S SUMMARY"
+                        items={[
+                            {
+                                label: "TOTAL EXPENSE",
+                                value:
+                                    chartSummaryData.expense.length > 0
+                                        ? chartSummaryData.expense[0]["value"]
+                                        : "loading...",
+                            },
+                            {
+                                label: "TOTAL WEIGHT",
+                                value:
+                                    chartSummaryData.weight.length > 0
+                                        ? chartSummaryData.weight[0]["value"]
+                                        : "loading...",
+                            },
+                            {
+                                label: "UNLOADED TRUCKS",
+                                value: unloadedTruckCountLoading
+                                    ? "loading..."
+                                    : unloadedTruckCount,
+                            },
+                        ]}
+                    />
+
+                    <View className="mt-4">
+                        <ChartSection
+                            tabs={chartTabs}
+                            chartData={chartData}
+                            summaryData={chartSummaryData}
+                        />
+                    </View>
+
+                    <View className="mt-4">
+                        <QueueSection
+                            title="Virtual Queue"
+                            data={queueData}
+                            onSeeAllPress={handleSeeAllPress}
+                            onItemPress={handleQueueItemPress}
+                            showAvatar={true}
+                            emptyStateText="No vehicles in queue"
+                            seeAllText="View All"
+                        />
+                    </View>
+                </View>
+            </ScrollView>
         </View>
-      </ScrollView>
-    </View>
-  );
+    );
 };
 
 export default OilHome;

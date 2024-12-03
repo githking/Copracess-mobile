@@ -6,10 +6,11 @@ import {
   StatusBar,
   TouchableOpacity,
   Animated,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import VirtualQueueHeader from "@/components/VirtualQueueHeader";
-import VirtualQueueTable from "@/components/VirtualQueueTable";
+import VirtualQueueFlatList from "@/components/VirtualQueueTable";
 import { useCameraPermissions } from "expo-camera";
 import { useRouter } from "expo-router";
 
@@ -21,11 +22,21 @@ const Queue: React.FC = () => {
   const [permission, requestPermission] = useCameraPermissions();
   const isPermissionGranted = Boolean(permission?.granted);
 
-  const handleScanQR = () => {
+  const handleScanQR = async () => {
     if (!isPermissionGranted) {
-      requestPermission();
+      const { granted } = await requestPermission();
+      if (granted) {
+        router.replace("/camera");
+      } else {
+        Alert.alert(
+          "Camera Permission Denied",
+          "You need to enable camera access to scan QR codes.",
+          [{ text: "OK" }]
+        );
+      }
+    } else {
+      router.replace("/camera");
     }
-    router.replace("/camera");
   };
 
   const handleContentSizeChange = (contentWidth: number, height: number) => {
@@ -38,11 +49,36 @@ const Queue: React.FC = () => {
     extrapolate: "clamp",
   });
 
+  const data = [{ key: "header" }, { key: "table" }];
+
+  const renderItem = ({ item }: { item: { key: string } }) => {
+    if (item.key === "header") {
+      return (
+        <View className="p-4">
+          <VirtualQueueHeader
+            queueNumber="VQ-321"
+            currentlyUnloading={246}
+            totalTrucks={78}
+            completed={13}
+            onTheWay={42}
+          />
+        </View>
+      );
+    }
+    if (item.key === "table") {
+      return <VirtualQueueFlatList />;
+    }
+    return null;
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-off-100">
       <StatusBar barStyle="dark-content" backgroundColor="#FBF6EE" />
       <View className="flex-1">
-        <Animated.ScrollView
+        <Animated.FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
           contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -50,18 +86,7 @@ const Queue: React.FC = () => {
           )}
           scrollEventThrottle={16}
           onContentSizeChange={handleContentSizeChange}
-        >
-          <View className="p-4">
-            <VirtualQueueHeader
-              queueNumber="VQ-321"
-              currentlyUnloading={246}
-              totalTrucks={78}
-              completed={13}
-              onTheWay={42}
-            />
-            <VirtualQueueTable />
-          </View>
-        </Animated.ScrollView>
+        />
         <Animated.View
           style={{ opacity }}
           className="absolute bottom-5 left-0 right-0 items-center"
