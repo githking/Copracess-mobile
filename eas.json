@@ -21,7 +21,8 @@
         "EXPO_PUBLIC_UPLOAD_PRESET": "copracess",
         "CLOUDINARY_API_KEY": "485317616582629",
         "CLOUDINARY_API_SECRET": "rS8CyeY88kclaOvL8p2VAAFNGwg",
-        "CLOUDINARY_URL": "cloudinary://485317616582629:rS8CyeY88kclaOvL8p2VAAFNGwg@dn3glov11"
+        "CLOUDINARY_URL": "cloudinary://485317616582629:rS8CyeY88kclaOvL8p2VAAFNGwg@dn3glov11",
+        "EXPO_PUBLIC_ENCRYPTION_KEY": ""
       }
     },
     "production": {

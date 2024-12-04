@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Share,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as FileSystem from "expo-file-system";
@@ -19,15 +20,47 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
 }) => {
   const handleShare = async () => {
     try {
-      await Share.share({
-        message: "QR Code",
-        url: qrCodeData,
-      });
+      // Extract base64 data
+      const base64Data = qrCodeData.split("base64,")[1];
+
+      // Prepare upload data
+      const formData = new FormData();
+      formData.append("file", `data:image/png;base64,${base64Data}`);
+      formData.append("upload_preset", process.env.EXPO_PUBLIC_UPLOAD_PRESET!);
+
+      // Upload to Cloudinary
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+
+      if (!data.secure_url) {
+        throw new Error("Failed to upload image");
+      }
+      // Share message with URL
+      const shareMessage = `Here is your Copracess booking QR code\n\nClick here to view: ${data.secure_url}`;
+
+      await Share.share(
+        {
+          title: "Copracess Booking QR Code",
+          message: shareMessage,
+          url: data.secure_url,
+        },
+        {
+          dialogTitle: "Share Booking QR Code",
+          tintColor: "#59A60E",
+        }
+      );
     } catch (error) {
-      console.error(error);
+      console.error("Error sharing QR code:", error);
+      Alert.alert("Error", "Failed to share QR code. Please try again.");
     }
   };
-
   const handleDownload = async () => {
     try {
       const { status } = await MediaLibrary.requestPermissionsAsync();

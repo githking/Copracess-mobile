@@ -77,8 +77,8 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }: any) => {
-  // axios.defaults.baseURL = "https://www.copracess.live/api/mobile";
-  axios.defaults.baseURL = "http://192.168.55.101:3000/api/mobile";
+  axios.defaults.baseURL = "https://www.copracess.live/api/mobile";
+  // axios.defaults.baseURL = "http://192.168.55.101:3000/api/mobile";
 
   const [authState, setAuthState] = useState<AuthState>(initialAuthState);
   const tokenExpiryBuffer = 60 * 1000; // 1 minute buffer
