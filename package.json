@@ -19,6 +19,7 @@
     "@react-navigation/stack": "^6.4.1",
     "axios": "^1.7.7",
     "cloudinary-react-native": "^1.0.1",
+    "crypto-js": "^4.2.0",
     "expo": "~51.0.39",
     "expo-background-fetch": "^12.0.1",
     "expo-barcode-scanner": "~13.0.1",
@@ -58,6 +59,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/react": "~18.2.45",
     "@types/react-native-check-box": "^2.1.6",
     "@types/react-native-table-component": "^1.2.8",

@@ -61,33 +61,33 @@ const oilsignUp = () => {
 
     const mapRef = useRef<MapView>(null);
 
-    useEffect(() => {
-        (async () => {
-            let { status } = await Location.requestForegroundPermissionsAsync();
-            if (status !== "granted") {
-                Alert.alert("Permission to access location was denied");
-                return;
-            }
+    // useEffect(() => {
+    //     (async () => {
+    //         let { status } = await Location.requestForegroundPermissionsAsync();
+    //         if (status !== "granted") {
+    //             Alert.alert("Permission to access location was denied");
+    //             return;
+    //         }
 
-            let location = await Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Highest,
-            });
-            setUserLocation(location as LocationData);
+    //         let location = await Location.getCurrentPositionAsync({
+    //             accuracy: Location.Accuracy.Highest,
+    //         });
+    //         setUserLocation(location as LocationData);
 
-            if (oilMills.length > 0) {
-                const millsWithDistance = oilMills.map((mill) => ({
-                    ...mill,
-                    distance: calculateDistance(
-                        location.coords.latitude,
-                        location.coords.longitude,
-                        mill.geolocation.latitude,
-                        mill.geolocation.longitude
-                    ),
-                }));
-                setFilteredMills(millsWithDistance);
-            }
-        })();
-    }, [oilMills]);
+    //         if (oilMills.length > 0) {
+    //             const millsWithDistance = oilMills.map((mill) => ({
+    //                 ...mill,
+    //                 distance: calculateDistance(
+    //                     location.coords.latitude,
+    //                     location.coords.longitude,
+    //                     mill.geolocation.latitude,
+    //                     mill.geolocation.longitude
+    //                 ),
+    //             }));
+    //             setFilteredMills(millsWithDistance);
+    //         }
+    //     })();
+    // }, [oilMills]);
 
     const pickImage = async () => {
         try {
@@ -286,6 +286,24 @@ const oilsignUp = () => {
         }
     };
 
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const handleNext = async () => {
+        if (currentStep === 2) {
+            let { status } = await Location.requestForegroundPermissionsAsync();
+            if (status !== "granted") {
+                Alert.alert("Permission to access location was denied");
+                return;
+            }
+
+            let location = await Location.getCurrentPositionAsync({
+                accuracy: Location.Accuracy.Highest,
+            });
+            setUserLocation(location as LocationData);
+        }
+        setCurrentStep((prevStep) => prevStep + 1);
+    };
+
     return (
         <SafeAreaView className="bg-off-100 h-full">
             <ScrollView className="flex-grow-1">
@@ -307,7 +325,9 @@ const oilsignUp = () => {
                         completedProgressBarColor="#59A60E"
                         completedStepIconColor="#59A60E"
                         activeStepIconBorderColor="#59A60E"
-                        marginBottom={20}>
+                        marginBottom={20}
+                        activeStep={currentStep} // Track the current step
+                        onNext={handleNext}>
                         <ProgressStep
                             nextBtnStyle={{
                                 backgroundColor: "#59A60E",
@@ -398,16 +418,16 @@ const oilsignUp = () => {
                                 fontSize: 16,
                                 fontWeight: "bold",
                             }}
-                            label="Company Info">
+                            label="Organization">
                             <View className="items-center">
                                 <View className="items-center mb-7 mt-0">
                                     <FormField
-                                        title="Business Name"
+                                        title="Organization Name"
                                         value={form.Org_name}
                                         handleChangeText={(e) => setForm({ ...form, Org_name: e })}
                                         otherStyles="mt-2 mb-2"
                                         keyboardType="default"
-                                        placeholder="Business Name"
+                                        placeholder="Organization Name"
                                     />
                                     <FormField
                                         title="Position"
@@ -424,6 +444,7 @@ const oilsignUp = () => {
                                         keyboardType="default"
                                         placeholder="Address"
                                     />
+
                                     <View className="flex-row justify-between mt-2 w-full mb-5">
                                         <View className="flex-1 mr-2">
                                             <Text className="mb-1 font-bold">Business Permit</Text>
@@ -457,10 +478,30 @@ const oilsignUp = () => {
                             nextBtnStyle={{
                                 backgroundColor: "#59A60E",
                                 borderRadius: 12,
+                                minHeight: 62,
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                width: 100,
+                            }}
+                            nextBtnTextStyle={{
+                                color: "#FFFFFF",
+                                fontSize: 16,
+                                fontWeight: "bold",
                             }}
                             previousBtnStyle={{
                                 backgroundColor: "#59A60E",
                                 borderRadius: 12,
+                                minHeight: 62,
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                width: 100,
+                            }}
+                            previousBtnTextStyle={{
+                                color: "#FFFFFF",
+                                fontSize: 16,
+                                fontWeight: "bold",
                             }}>
                             <View className="items-center mb-7">
                                 <Text className="mb-2 font-bold">Select Business Location</Text>
