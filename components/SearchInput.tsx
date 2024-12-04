@@ -1,21 +1,22 @@
+// components/SearchInput.tsx
 import React, { useState } from "react";
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  Image,
-  ImageSourcePropType,
-} from "react-native";
-
+import { View, TextInput, TouchableOpacity, Alert, Image } from "react-native";
 import type { SearchInputProps } from "../types/type";
 
 const SearchInput: React.FC<SearchInputProps> = ({
   initialQuery = "",
   icon,
-  handlePress,
+  onSearch,
 }) => {
   const [query, setQuery] = useState(initialQuery);
+
+  const handleSearch = () => {
+    if (query.trim() === "") {
+      Alert.alert("Empty", "Please input something to search records");
+      return;
+    }
+    onSearch(query);
+  };
 
   return (
     <View className="flex flex-row items-center space-x-2 w-full h-12 px-3 bg-white rounded-lg border border-primary focus:border-secondary">
@@ -25,19 +26,14 @@ const SearchInput: React.FC<SearchInputProps> = ({
         placeholder="Search Record"
         placeholderTextColor="#CDCDE0"
         onChangeText={setQuery}
+        onSubmitEditing={handleSearch}
+        returnKeyType="search"
       />
-      <TouchableOpacity
-        onPress={() => {
-          if (query === "") {
-            Alert.alert("Empty", "Please input something to search records");
-          } else {
-            handlePress();
-          }
-        }}
-      >
+      <TouchableOpacity onPress={handleSearch}>
         <Image
           source={icon}
-          style={{ width: 16, height: 16, tintColor: "#59A60E" }}
+          className="w-5 h-5"
+          style={{ tintColor: "#59A60E" }}
         />
       </TouchableOpacity>
     </View>

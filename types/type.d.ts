@@ -117,7 +117,7 @@ export declare interface CopraOwnerTransaction {
 export interface SearchInputProps {
     initialQuery?: string;
     icon: ImageSourcePropType;
-    handlePress: () => void;
+    onSearch: (query: string) => void; // Changed from handlePress
 }
 
 export interface addFABProps {
