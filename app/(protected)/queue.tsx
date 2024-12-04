@@ -1,6 +1,13 @@
 // app/(protected)/queue.tsx
 import React, { useState, useRef, useEffect } from "react";
-import { View, SafeAreaView, StatusBar, TouchableOpacity, Animated, Alert } from "react-native";
+import {
+  View,
+  SafeAreaView,
+  StatusBar,
+  TouchableOpacity,
+  Animated,
+  Alert,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import VirtualQueueHeader from "@/components/VirtualQueueHeader";
 import VirtualQueueFlatList from "@/components/VirtualQueueTable";
@@ -10,139 +17,144 @@ import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 
 const Queue: React.FC = () => {
-    const scrollY = useRef(new Animated.Value(0)).current;
-    const [maxScrollY, setMaxScrollY] = useState(1);
-    const router = useRouter();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [maxScrollY, setMaxScrollY] = useState(1);
+  const router = useRouter();
 
-    const [permission, requestPermission] = useCameraPermissions();
-    const isPermissionGranted = Boolean(permission?.granted);
+  const [permission, requestPermission] = useCameraPermissions();
+  const isPermissionGranted = Boolean(permission?.granted);
 
-    const handleScanQR = async () => {
-        if (!isPermissionGranted) {
-            const { granted } = await requestPermission();
-            if (granted) {
-                router.replace("/camera");
-            } else {
-                Alert.alert(
-                    "Camera Permission Denied",
-                    "You need to enable camera access to scan QR codes.",
-                    [{ text: "OK" }]
-                );
-            }
-        } else {
-            router.replace("/camera");
-        }
-    };
+  const handleScanQR = async () => {
+    if (!isPermissionGranted) {
+      const { granted } = await requestPermission();
+      if (granted) {
+        router.replace("/camera");
+      } else {
+        Alert.alert(
+          "Camera Permission Denied",
+          "You need to enable camera access to scan QR codes.",
+          [{ text: "OK" }]
+        );
+      }
+    } else {
+      router.replace("/camera");
+    }
+  };
 
-    const handleContentSizeChange = (contentWidth: number, height: number) => {
-        setMaxScrollY(Math.max(height - 400, 1));
-    };
+  const handleContentSizeChange = (contentWidth: number, height: number) => {
+    setMaxScrollY(Math.max(height - 400, 1));
+  };
 
-    const opacity = scrollY.interpolate({
-        inputRange: [0, maxScrollY],
-        outputRange: [1, 0.2],
-        extrapolate: "clamp",
-    });
+  const opacity = scrollY.interpolate({
+    inputRange: [0, maxScrollY],
+    outputRange: [1, 0.2],
+    extrapolate: "clamp",
+  });
 
-    const data = [{ key: "header" }, { key: "table" }];
+  const data = [{ key: "header" }, { key: "table" }];
 
-    const { authState } = useAuth();
+  const { authState } = useAuth();
 
-    interface QueueData {
-        completed: number;
-        currentlyUnloading: string;
-        onTheWay: number;
-        totalTrucks: number;
+  interface QueueData {
+    completed: number;
+    currentlyUnloading: string;
+    onTheWay: number;
+    totalTrucks: number;
+  }
+
+  const [loading, setLoading] = useState(true);
+  const [queueData, setQueueData] = useState<QueueData | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchQueue = async () => {
+    if (!authState?.accessToken) {
+      setLoading(false);
+      setError("Authentication required");
+      return;
     }
 
-    const [loading, setLoading] = useState(true);
-    const [queueData, setQueueData] = useState<QueueData | null>(null);
-    const [refreshing, setRefreshing] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    try {
+      const response = await axios.get("/queue/card", {
+        headers: {
+          Authorization: `Bearer ${authState.accessToken}`,
+        },
+      });
+      console.log("Queue Stats data:", response.data);
+      setQueueData(response.data.queue);
+      setError(null);
+    } catch (err: any) {
+      console.error("Error fetching queue:", err);
+      setError(err.response?.data?.details || "Failed to fetch queue data");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
-    const fetchQueue = async () => {
-        if (!authState?.accessToken) {
-            setLoading(false);
-            setError("Authentication required");
-            return;
-        }
+  useEffect(() => {
+    fetchQueue();
+  }, []);
 
-        try {
-            const response = await axios.get("/queue/card", {
-                headers: {
-                    Authorization: `Bearer ${authState.accessToken}`,
-                },
-            });
-            console.log("Queue Stats data:", response.data);
-            setQueueData(response.data.queue);
-            setError(null);
-        } catch (err: any) {
-            console.error("Error fetching queue:", err);
-            setError(err.response?.data?.details || "Failed to fetch queue data");
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
+  const renderItem = ({ item }: { item: { key: string } }) => {
+    if (item.key === "header") {
+      return (
+        <View className="p-4">
+          <VirtualQueueHeader
+            queueNumber="VQ-321"
+            currentlyUnloading={queueData?.currentlyUnloading || "None"}
+            totalTrucks={queueData?.totalTrucks || 0}
+            completed={queueData?.completed || 0}
+            onTheWay={queueData?.onTheWay || 0}
+          />
+        </View>
+      );
+    }
+    if (item.key === "table") {
+      return <VirtualQueueFlatList />;
+    }
+    return null;
+  };
 
-    useEffect(() => {
-        fetchQueue();
-    }, []);
-
-    const renderItem = ({ item }: { item: { key: string } }) => {
-        if (item.key === "header") {
-            return (
-                <View className="p-4">
-                    <VirtualQueueHeader
-                        queueNumber="VQ-321"
-                        currentlyUnloading={queueData?.currentlyUnloading || "None"}
-                        totalTrucks={queueData?.totalTrucks || 0}
-                        completed={queueData?.completed || 0}
-                        onTheWay={queueData?.onTheWay || 0}
-                    />
-                </View>
-            );
-        }
-        if (item.key === "table") {
-            return <VirtualQueueFlatList />;
-        }
-        return null;
-    };
-
-    return (
-        <SafeAreaView className="flex-1 bg-off-100">
-            <StatusBar barStyle="dark-content" backgroundColor="#FBF6EE" />
-            <View className="flex-1">
-                <Animated.FlatList
-                    data={data}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.key}
-                    contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
-                    onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
-                        useNativeDriver: false,
-                    })}
-                    scrollEventThrottle={16}
-                    onContentSizeChange={handleContentSizeChange}
-                />
-                <Animated.View
-                    style={{ opacity }}
-                    className="absolute bottom-5 left-0 right-0 items-center">
-                    <TouchableOpacity
-                        onPress={handleScanQR}
-                        className="w-20 h-20 bg-primary border-4 border-secondary-100 rounded-full items-center justify-center shadow-lg"
-                        style={{
-                            elevation: 8,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 4,
-                        }}>
-                        <Ionicons name="qr-code-outline" size={45} color="white" />
-                    </TouchableOpacity>
-                </Animated.View>
-            </View>
-        </SafeAreaView>
-    );
+  return (
+    <SafeAreaView className="flex-1 bg-off-100">
+      <StatusBar barStyle="dark-content" backgroundColor="#FBF6EE" />
+      <View className="flex-1">
+        <Animated.FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            {
+              useNativeDriver: false,
+            }
+          )}
+          scrollEventThrottle={16}
+          onContentSizeChange={handleContentSizeChange}
+        />
+        <Animated.View
+          style={{ opacity }}
+          className="absolute bottom-5 left-0 right-0 items-center"
+        >
+          <TouchableOpacity
+            onPress={handleScanQR}
+            className="w-20 h-20 bg-primary border-4 border-secondary-100 rounded-full items-center justify-center shadow-lg"
+            style={{
+              elevation: 8,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+            }}
+          >
+            <Ionicons name="qr-code-outline" size={45} color="white" />
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    </SafeAreaView>
+  );
 };
 
 export default Queue;

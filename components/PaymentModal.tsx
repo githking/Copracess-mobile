@@ -1,224 +1,263 @@
+// PaymentModal.tsx
 import { useAuth } from "@/context/AuthContext";
 import {
-    CopraOwnerTransaction,
-    OilmillTransaction,
-    PaymentModalProps,
+  CopraOwnerTransaction,
+  OilmillTransaction,
+  PaymentModalProps,
 } from "@/types/type";
 import React, { useState } from "react";
 import {
-    View,
-    Text,
-    TouchableOpacity,
-    Modal,
-    TouchableWithoutFeedback,
-    ScrollView,
-    Linking,
-    Alert,
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  ScrollView,
+  Alert,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker"; // Make sure to import from the correct package
+import { Picker } from "@react-native-picker/picker";
 import PaymentNotFoundModal from "@/components/PaymentNotFoundModal";
 import FormField from "@/components/FormField";
 import CustomButton from "@/components/CustomButton";
 import axios from "axios";
-import { handleCashPayment, handleOnlinePayment } from "@/services/payment";
+
+interface PaymentFormState {
+  totalAmount: number;
+  remarks: string;
+  paymentMethod: string;
+  plateNumber: string;
+  transactionID: string;
+  actualWeight: number; // Change to number since we'll do calculations
+  qualityGrade: string;
+}
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
-    visible,
-    transaction,
-    onConfirm,
-    onClose,
+  visible,
+  transaction,
+  onConfirm,
+  onClose,
 }) => {
-    if (!transaction) {
-        return <PaymentNotFoundModal onClose={onClose} visible={visible} />;
+  if (!transaction) {
+    return <PaymentNotFoundModal onClose={onClose} visible={visible} />;
+  }
+
+  const { authState } = useAuth();
+  const isCopraOwner = authState?.data.role === "COPRA_BUYER";
+
+  const [form, setForm] = useState<PaymentFormState>({
+    totalAmount: transaction.totalAmount || 0,
+    remarks: transaction.remarks || "",
+    paymentMethod: transaction.paymentType,
+    plateNumber: transaction.plateNumber,
+    transactionID: transaction.id,
+    actualWeight: transaction.actualWeight || 0,
+    qualityGrade: transaction.qualityGrade || "Standard",
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (name: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleTotalAmountChange = (value: string) => {
+    // Remove any non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^\d.]/g, "");
+
+    // Prevent multiple decimal points
+    const parts = cleanValue.split(".");
+    const sanitizedValue = parts[0] + (parts.length > 1 ? "." + parts[1] : "");
+
+    const amount = parseFloat(sanitizedValue);
+
+    setForm((prev) => ({
+      ...prev,
+      totalAmount: isNaN(amount) ? 0 : amount,
+    }));
+  };
+
+  const handleCloseModal = () => {
+    if (isSubmitting) return;
+
+    const isDirty =
+      form.totalAmount !== transaction.totalAmount ||
+      form.remarks !== (transaction.remarks || "") ||
+      form.paymentMethod !== transaction.paymentType;
+
+    if (isDirty) {
+      Alert.alert(
+        "Discard Changes",
+        "Are you sure you want to discard your changes?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Discard", style: "destructive", onPress: onClose },
+        ]
+      );
+    } else {
+      onClose();
     }
+  };
 
-    const { authState } = useAuth();
-    const isCopraOwner = authState?.data.role === "COPRA_BUYER";
+  const handleConfirmPayment = async () => {
+    setIsSubmitting(true);
+    try {
+      if (form.paymentMethod === "ONLINE_PAYMENT") {
+        // For online payment
+        const response = await axios.post(
+          `/transactions/payment?transactionID=${transaction.id}`,
+          { totalAmount: form.totalAmount } // Include totalAmount in body
+        );
 
-    const [form, setForm] = useState({
-        discount: 0,
-        totalAmount: 0,
-        remarks: transaction.remarks || "",
-        paymentMethod: transaction.paymentType,
-        plateNumber: transaction.plateNumber,
-        transactionID: transaction.id,
-    });
-
-    const handleInputChange = (name: string, value: string) => {
-        setForm((prevForm) => ({
-            ...prevForm,
-            [name]: value,
-        }));
-    };
-
-    const handleDiscountChange = (value: string) => {
-        const discountValue = parseFloat(value);
-        if (!isNaN(discountValue)) {
-            setForm((prevForm) => ({
-                ...prevForm,
-                discount: discountValue,
-            }));
-        }
-    };
-
-    const handleTotalAmountChange = (value: string) => {
-        const amountValue = parseFloat(value);
-        if (!isNaN(amountValue)) {
-            setForm((prevForm) => ({
-                ...prevForm,
-                totalAmount: amountValue,
-            }));
-        }
-    };
-
-    const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const handleConfirmPayment = async () => {
-        setIsSubmitting(true);
-
-        if (form.paymentMethod === "ONLINE_PAYMENT") {
-            console.log("ONLINE");
-            await handleOnlinePayment(
-                form,
-                authState?.data.email || "",
-                onConfirm,
-                setIsSubmitting
-            );
-        } else if (form.paymentMethod === "CASH") {
-            console.log("CASH");
-            await handleCashPayment(
-                form,
-                authState?.data.email || "",
-                onConfirm,
-                setIsSubmitting
-            );
+        if (response.data.payoutResponse?.status === "ACCEPTED") {
+          await axios.put(
+            `/transactions/payment?transactionID=${transaction.id}&payoutID=${response.data.payoutResponse.id}`,
+            {
+              totalAmount: form.totalAmount,
+              remarks: form.remarks,
+              paymentMethod: form.paymentMethod,
+            }
+          );
+          Alert.alert("Success", "Online payment processed successfully!");
         } else {
-            console.log("None");
+          throw new Error("Payment not accepted");
         }
-    };
+      } else {
+        // For cash payment
+        await axios.put(
+          `/transactions/payment?transactionID=${transaction.id}`,
+          {
+            totalAmount: form.totalAmount,
+            remarks: form.remarks,
+            paymentMethod: form.paymentMethod,
+          }
+        );
+        Alert.alert("Success", "Cash payment processed successfully!");
+      }
+      onConfirm();
+    } catch (error) {
+      console.error("Payment error:", error);
+      Alert.alert("Error", "Failed to process payment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <TouchableWithoutFeedback onPress={handleCloseModal}>
+        <View className="flex-1 bg-black/50 justify-center items-center">
+          <TouchableWithoutFeedback>
+            <View className="bg-white rounded-2xl w-[90%] max-w-md">
+              {/* Header */}
+              <View className="flex-row justify-between items-center p-4 border-b border-gray-200">
+                <Text className="text-xl font-pbold text-primary">
+                  Confirm Payment
+                </Text>
+                <TouchableOpacity
+                  onPress={handleCloseModal}
+                  className="p-2 rounded-full hover:bg-gray-100"
+                >
+                  <Text className="text-2xl text-gray-500">×</Text>
+                </TouchableOpacity>
+              </View>
 
-    return (
-        <Modal visible={visible} transparent animationType="fade">
-            <TouchableWithoutFeedback onPress={onClose}>
-                <ScrollView className="pb-20">
-                    <View className="flex-1 bg-black/50 justify-center items-center p-4">
-                        <TouchableWithoutFeedback>
-                            <View className="bg-white rounded-lg p-6 w-full max-w-md">
-                                {/* Scrollable content */}
-                                <Text className="text-lg font-bold mb-4">
-                                    Confirm Payment
-                                </Text>
-                                <Text>
-                                    Owner:{" "}
-                                    {isCopraOwner
-                                        ? (transaction as CopraOwnerTransaction)
-                                              .oilMillCompanyName
-                                        : (transaction as OilmillTransaction)
-                                              .copraOwnerName}
-                                </Text>
-                                <Text>
-                                    Plate Number: {transaction?.plateNumber}
-                                </Text>
-                                <Text>
-                                    Amount: {transaction?.totalAmount} PHP
-                                </Text>
+              <ScrollView className="p-6">
+                {/* Transaction Details Section */}
+                <View className="bg-gray-50 p-4 rounded-xl mb-6">
+                  <Text className="text-sm text-gray-500 mb-2">
+                    Transaction Details
+                  </Text>
+                  <Text className="text-base mb-2">
+                    <Text className="font-pmedium">Owner: </Text>
+                    {isCopraOwner
+                      ? (transaction as CopraOwnerTransaction)
+                          .oilMillCompanyName
+                      : (transaction as OilmillTransaction).copraOwnerName}
+                  </Text>
+                  <Text className="text-base mb-2">
+                    <Text className="font-pmedium">Plate Number: </Text>
+                    {transaction.plateNumber}
+                  </Text>
 
-                                {/* Plate Number Input (disabled) */}
-                                <FormField
-                                    title="Plate Number"
-                                    value={form.plateNumber}
-                                    handleChangeText={() => {}}
-                                    placeholder="Plate number"
-                                    otherStyles="mt-2"
-                                    editable={false}
-                                />
+                  {/* Amount Field */}
+                  {!isCopraOwner ? ( // If user is Oil Mill, show editable amount field
+                    <FormField
+                      title="Total Amount"
+                      value={String(form.totalAmount)}
+                      handleChangeText={handleTotalAmountChange}
+                      placeholder="Enter amount"
+                      otherStyles="mt-2"
+                      keyboardType="numeric"
+                    />
+                  ) : (
+                    // If user is Copra Buyer, show read-only amount
+                    <Text className="text-base">
+                      <Text className="font-pmedium">Amount: </Text>₱
+                      {(form.totalAmount || 0).toLocaleString()}
+                    </Text>
+                  )}
+                </View>
 
-                                {/* Payment Method Select */}
-                                <View className="mt-4">
-                                    <Text className="text-base text-black font-pmedium">
-                                        Payment Method
-                                    </Text>
-                                    <View className="mt-2 w-full h-16 px-4 bg-white rounded-2xl border-2 border-primary focus:border-secondary">
-                                        <Picker
-                                            selectedValue={form.paymentMethod}
-                                            onValueChange={(itemValue) =>
-                                                handleInputChange(
-                                                    "paymentMethod",
-                                                    itemValue
-                                                )
-                                            }
-                                        >
-                                            <Picker.Item
-                                                label="Cash"
-                                                value="CASH"
-                                            />
-                                            <Picker.Item
-                                                label="Online Payment"
-                                                value="ONLINE_PAYMENT"
-                                            />
-                                        </Picker>
-                                    </View>
-                                </View>
+                {/* Payment Method Section */}
+                <View className="mb-6">
+                  <Text className="text-base font-pmedium mb-2">
+                    Payment Method
+                  </Text>
+                  <View className="border-2 border-primary rounded-xl overflow-hidden">
+                    <Picker
+                      selectedValue={form.paymentMethod}
+                      onValueChange={(value) =>
+                        handleInputChange("paymentMethod", value)
+                      }
+                      style={{ height: 50 }}
+                    >
+                      <Picker.Item label="Cash" value="CASH" />
+                      <Picker.Item
+                        label="Online Payment"
+                        value="ONLINE_PAYMENT"
+                      />
+                    </Picker>
+                  </View>
+                </View>
 
-                                {/* Discount Input */}
-                                <FormField
-                                    title="Discount"
-                                    value={String(form.discount)}
-                                    handleChangeText={handleDiscountChange}
-                                    keyboardType="numeric"
-                                    otherStyles="mt-2"
-                                    placeholder="Enter discount"
-                                />
+                {/* Remarks Section */}
+                <FormField
+                  title="Remarks"
+                  value={form.remarks}
+                  handleChangeText={(text) =>
+                    handleInputChange("remarks", text)
+                  }
+                  placeholder="Enter remarks (optional)"
+                  otherStyles="mb-6"
+                />
 
-                                {/* Total Amount Input (disabled) */}
-                                <FormField
-                                    title="Total Amount"
-                                    value={String(form.totalAmount)}
-                                    handleChangeText={handleTotalAmountChange}
-                                    placeholder="Total amount"
-                                    otherStyles="mt-2"
-                                    keyboardType="numeric"
-                                />
-
-                                {/* Remarks Input */}
-                                <FormField
-                                    title="Remarks"
-                                    value={form.remarks}
-                                    handleChangeText={(text) =>
-                                        handleInputChange("remarks", text)
-                                    }
-                                    placeholder="Enter remarks"
-                                    otherStyles="mt-2"
-                                />
-
-                                <View className="space-y-4">
-                                    <CustomButton
-                                        title={
-                                            isSubmitting
-                                                ? "Processing..."
-                                                : "Confirm"
-                                        } // Update button text when submitting
-                                        handlePress={handleConfirmPayment}
-                                        containerStyles="mt-7"
-                                        isLoading={isSubmitting} // Pass loading state
-                                    />
-
-                                    <TouchableOpacity
-                                        onPress={onClose}
-                                        className="w-full bg-gray-500 rounded-lg py-3 mt-4"
-                                    >
-                                        <Text className="text-white font-pbold text-center">
-                                            Cancel
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </View>
-                </ScrollView>
-            </TouchableWithoutFeedback>
-        </Modal>
-    );
+                {/* Action Buttons */}
+                <View className="space-y-3">
+                  <CustomButton
+                    title={isSubmitting ? "Processing..." : "Confirm Payment"}
+                    handlePress={handleConfirmPayment}
+                    containerStyles="bg-primary"
+                    textStyles="font-pbold"
+                    isLoading={isSubmitting}
+                  />
+                  <TouchableOpacity
+                    onPress={handleCloseModal}
+                    className="bg-gray-100 rounded-xl py-3"
+                  >
+                    <Text className="text-gray-700 font-pmedium text-center">
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
 };
 
 export default PaymentModal;
