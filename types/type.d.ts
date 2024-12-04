@@ -172,7 +172,7 @@ interface LogoutModalProps {
 
 export interface VirtualQueueHeaderProps {
     queueNumber: string;
-    currentlyUnloading: number;
+    currentlyUnloading: string;
     totalTrucks: number;
     completed: number;
     onTheWay: number;

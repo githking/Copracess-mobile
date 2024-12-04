@@ -55,7 +55,6 @@ const OilHome = () => {
     const fetchQueue = async () => {
         try {
             const response = await axios.get("/queue");
-            console.log("Queue data:", response.data);
             setQueueData(response.data.queue || []);
         } catch (err: any) {
             console.error("Error fetching queue:", err);
