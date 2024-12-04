@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import VirtualQueueHeader from "@/components/VirtualQueueHeader";
 import VirtualQueueFlatList from "@/components/VirtualQueueTable";
 import { useCameraPermissions } from "expo-camera";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 
@@ -13,6 +13,7 @@ const Queue: React.FC = () => {
     const scrollY = useRef(new Animated.Value(0)).current;
     const [maxScrollY, setMaxScrollY] = useState(1);
     const router = useRouter();
+    const pathname = usePathname();
 
     const [permission, requestPermission] = useCameraPermissions();
     const isPermissionGranted = Boolean(permission?.granted);
@@ -73,7 +74,6 @@ const Queue: React.FC = () => {
                     Authorization: `Bearer ${authState.accessToken}`,
                 },
             });
-            console.log("Queue Stats data:", response.data);
             setQueueData(response.data.queue);
             setError(null);
         } catch (err: any) {
@@ -87,7 +87,7 @@ const Queue: React.FC = () => {
 
     useEffect(() => {
         fetchQueue();
-    }, []);
+    }, [router, pathname]);
 
     const renderItem = ({ item }: { item: { key: string } }) => {
         if (item.key === "header") {

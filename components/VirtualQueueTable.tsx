@@ -20,6 +20,7 @@ import axios from "axios";
 import AssessmentCard from "@/components/AssessmentCard";
 import AssessmentModal from "@/components/AssessmentModal";
 import { saveAssessment } from "@/services/assessment";
+import { useRouter, usePathname } from "expo-router";
 
 const VirtualQueueFlatList: React.FC = () => {
     const [isFilterModalVisible, setIsFilterModalVisible] = useState(false);
@@ -28,6 +29,8 @@ const VirtualQueueFlatList: React.FC = () => {
     const [queue, setQueue] = useState<VirtualQueueItem[]>([]);
     const [error, setError] = useState<string | null>(null);
     const { authState } = useAuth();
+    const router = useRouter();
+    const pathname = usePathname();
 
     const fetchQueue = async () => {
         if (!authState?.accessToken) {
@@ -56,7 +59,7 @@ const VirtualQueueFlatList: React.FC = () => {
 
     useEffect(() => {
         fetchQueue();
-    }, [authState?.accessToken]);
+    }, [authState?.accessToken, router, pathname]);
 
     const onRefresh = () => {
         console.log("Manual refresh triggered");
