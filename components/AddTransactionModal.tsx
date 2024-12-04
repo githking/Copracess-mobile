@@ -1,145 +1,135 @@
+// components/AssessmentModal.tsx
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Modal } from "react-native";
-import DateTimePicker, {
-  DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  Alert,
+  ActivityIndicator,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import type { VirtualQueueItem } from "@/types/type";
 
-import type { AddTransactionModalProps } from "../types/type";
+interface AssessmentModalProps {
+  visible: boolean;
+  item: VirtualQueueItem;
+  onClose: () => void;
+  onSave: (details: { actualWeight: string; qualityGrade: string }) => void;
+}
 
-const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+const QUALITY_GRADES = ["Premium", "Standard", "Low Grade", "Reject"] as const;
+
+const AssessmentModal: React.FC<AssessmentModalProps> = ({
   visible,
+  item,
   onClose,
+  onSave,
 }) => {
-  const [owner, setOwner] = useState("");
-  const [plateNumber, setPlateNumber] = useState("");
-  const [amount, setAmount] = useState("");
-  const [quality, setQuality] = useState("");
-  const [weight, setWeight] = useState("");
-  const [paymentDate, setPaymentDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [actualWeight, setActualWeight] = useState("");
+  const [qualityGrade, setQualityGrade] =
+    useState<(typeof QUALITY_GRADES)[number]>("Standard");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    onClose();
+  const validateForm = () => {
+    if (!actualWeight.trim()) {
+      Alert.alert("Error", "Please enter actual weight");
+      return false;
+    }
+
+    const weight = parseFloat(actualWeight);
+    if (isNaN(weight) || weight <= 0) {
+      Alert.alert("Error", "Please enter a valid weight");
+      return false;
+    }
+
+    if (!qualityGrade) {
+      Alert.alert("Error", "Please select quality grade");
+      return false;
+    }
+
+    return true;
   };
 
-  const onDateChange = (_: DateTimePickerEvent, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setPaymentDate(selectedDate);
-    }
+  const handleSave = () => {
+    if (!validateForm()) return;
+
+    const details = {
+      actualWeight,
+      qualityGrade,
+    };
+
+    onSave(details);
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setActualWeight("");
+    setQualityGrade("Standard");
+    onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View className="flex-1 bg-black/50 justify-center items-center p-4">
-        <View className="bg-white rounded-lg p-6 w-full max-w-md">
-          <View className="flex-row flex-wrap -mx-2">
-            <View className="w-1/2 px-2 mb-4">
-              <Text className="text-sm font-psemibold text-black mb-1">
-                Copra owner
-              </Text>
-              <TextInput
-                value={owner}
-                onChangeText={setOwner}
-                placeholder="Name"
-                className="w-full p-2 border border-primary rounded-md"
-              />
-            </View>
+      <View className="flex-1 justify-center items-center bg-black/50">
+        <View className="bg-white rounded-lg p-6 w-5/6">
+          <Text className="text-lg font-pbold mb-4 text-primary">
+            Assessment Details
+          </Text>
+          <Text className="text-lg font-pbold mb-4">{item.owner}</Text>
 
-            <View className="w-1/2 px-2 mb-4">
-              <Text className="text-sm font-psemibold text-black mb-1">
-                Plate number
-              </Text>
-              <TextInput
-                value={plateNumber}
-                onChangeText={setPlateNumber}
-                placeholder="Plate number"
-                className="w-full p-2 border border-primary rounded-md"
-              />
-            </View>
+          {/* Actual Weight Input */}
+          <View className="mb-4">
+            <Text className="text-sm font-psemibold">Actual Weight (kg):</Text>
+            <TextInput
+              value={actualWeight}
+              onChangeText={setActualWeight}
+              keyboardType="decimal-pad"
+              placeholder="Enter Actual Weight"
+              className="border border-gray-200 rounded p-2 mt-2"
+            />
+          </View>
 
-            <View className="w-1/2 px-2 mb-4">
-              <Text className="text-sm font-psemibold text-black mb-1">
-                Amount
-              </Text>
-              <TextInput
-                value={amount}
-                onChangeText={setAmount}
-                placeholder="₱"
-                keyboardType="numeric"
-                className="w-full p-2 border border-primary rounded-md"
-              />
-            </View>
-
-            <View className="w-1/2 px-2 mb-4">
-              <Text className="text-sm font-psemibold text-black mb-1">
-                Quality
-              </Text>
-              <TextInput
-                value={quality}
-                onChangeText={setQuality}
-                placeholder="Select Type"
-                className="w-full p-2 border border-primary rounded-md"
-              />
-            </View>
-
-            <View className="w-1/2 px-2 mb-4">
-              <Text className="text-sm font-psemibold text-black mb-1">
-                Weight
-              </Text>
-              <TextInput
-                value={weight}
-                onChangeText={setWeight}
-                placeholder="tons"
-                keyboardType="numeric"
-                className="w-full p-2 border border-primary rounded-md"
-              />
-            </View>
-
-            <View className="w-1/2 px-2 mb-4">
-              <Text className="text-sm font-psemibold text-black mb-1">
-                Payment Date
-              </Text>
-              <TouchableOpacity
-                onPress={() => setShowDatePicker(true)}
-                className="w-full p-2 border border-primary rounded-md"
+          {/* Quality Grade Picker */}
+          <View className="mb-4">
+            <Text className="text-sm font-psemibold">Quality Grade:</Text>
+            <View className="border border-gray-200 rounded mt-2">
+              <Picker
+                selectedValue={qualityGrade}
+                onValueChange={(value) => setQualityGrade(value)}
               >
-                <Text>{paymentDate.toDateString()}</Text>
-              </TouchableOpacity>
+                {QUALITY_GRADES.map((grade) => (
+                  <Picker.Item key={grade} label={grade} value={grade} />
+                ))}
+              </Picker>
             </View>
           </View>
 
-          <TouchableOpacity
-            onPress={handleSubmit}
-            className="w-full bg-primary rounded-md py-2 mt-4"
-          >
-            <Text className="text-white font-psemibold text-center">
-              ADD TRANSACTION
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={onClose}
-            className="w-full border border-primary rounded-md py-2 mt-2"
-          >
-            <Text className="text-primary font-psemibold text-center">
-              CANCEL
-            </Text>
-          </TouchableOpacity>
+          {/* Action Buttons */}
+          <View className="flex-row justify-end mt-4">
+            <TouchableOpacity
+              onPress={onClose}
+              className="bg-transparent rounded px-4 py-2 mr-4"
+            >
+              <Text className="text-primary font-psemibold">Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSave}
+              disabled={isSubmitting}
+              className="bg-primary rounded px-4 py-2"
+            >
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text className="text-white font-psemibold">Save</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-      {showDatePicker && (
-        <DateTimePicker
-          value={paymentDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-          themeVariant="dark"
-          accentColor="#59A60E"
-        />
-      )}
     </Modal>
   );
 };
 
-export default AddTransactionModal;
+export default AssessmentModal;
