@@ -8,6 +8,7 @@ import {
   TextInput,
   Alert,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import { useLocalSearchParams } from "expo-router";
@@ -19,11 +20,19 @@ import BookingCalendar from "@/components/BookingCalendar";
 import BookingHistorySidebar from "@/components/BookingSideBar";
 import SelectOilMillModal from "@/components/SelectMillModal";
 
+interface Price {
+  date: string;        
+  price: number;      
+  market_price: number;
+}
+
 interface Organization {
   id: string;
   name: string;
   address: string;
+  price: Price[];    
 }
+
 
 interface Booking {
   id: string;
@@ -60,6 +69,7 @@ const BookingScreen = () => {
       );
       if (selectedOrg) {
         setSelectedOilMill(selectedOrg);
+
         setForm((prev) => ({
           ...prev,
           oilMillId: selectedOrg.id,
@@ -67,6 +77,7 @@ const BookingScreen = () => {
       }
     }
   }, [params.organizationId, oilMills]);
+
   const [form, setForm] = useState({
     id: "",
     description: "",
@@ -100,6 +111,7 @@ const BookingScreen = () => {
   const fetchOilMills = async () => {
     try {
       const response = await axios.get("/map");
+      console.log("selected oilmill", response.data.organizations[0].price)
       setOilMills(response.data.organizations);
     } catch (error) {
       console.error("Error fetching oil mills:", error);
@@ -254,11 +266,35 @@ const BookingScreen = () => {
             {selectedOilMill ? (
               <>
                 <Text className="font-pmedium text-primary">
-                  {selectedOilMill.name}
+                  {selectedOilMill.name} 
                 </Text>
                 <Text className="text-sm text-gray-600">
                   {selectedOilMill.address}
                 </Text>
+                
+                {selectedOilMill.price && selectedOilMill.price.length > 0 ? (
+                    (() => {
+                      // Sort prices by date to get the most recent one
+                      const latestPrice = selectedOilMill.price.sort(
+                        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+                      )[0];
+                      return (
+                        <View>
+                          <Text className="text-sm text-gray-700">
+                            Latest Price: {latestPrice.price} PHP
+                          </Text>
+                          <Text className="text-sm text-gray-700">
+                            Market Price: {latestPrice.market_price} PHP
+                          </Text>
+                          <Text className="text-xs text-gray-500">
+                            Date: {new Date(latestPrice.date).toLocaleDateString()}
+                          </Text>
+                        </View>
+                      );
+                    })()
+                  ) : (
+                    <Text className="text-sm text-gray-500">No price available</Text>
+                  )}
               </>
             ) : (
               <Text className="text-gray-500">Select an oil mill</Text>
