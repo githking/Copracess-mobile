@@ -61,34 +61,6 @@ const oilsignUp = () => {
 
     const mapRef = useRef<MapView>(null);
 
-    // useEffect(() => {
-    //     (async () => {
-    //         let { status } = await Location.requestForegroundPermissionsAsync();
-    //         if (status !== "granted") {
-    //             Alert.alert("Permission to access location was denied");
-    //             return;
-    //         }
-
-    //         let location = await Location.getCurrentPositionAsync({
-    //             accuracy: Location.Accuracy.Highest,
-    //         });
-    //         setUserLocation(location as LocationData);
-
-    //         if (oilMills.length > 0) {
-    //             const millsWithDistance = oilMills.map((mill) => ({
-    //                 ...mill,
-    //                 distance: calculateDistance(
-    //                     location.coords.latitude,
-    //                     location.coords.longitude,
-    //                     mill.geolocation.latitude,
-    //                     mill.geolocation.longitude
-    //                 ),
-    //             }));
-    //             setFilteredMills(millsWithDistance);
-    //         }
-    //     })();
-    // }, [oilMills]);
-
     const pickImage = async () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -150,6 +122,17 @@ const oilsignUp = () => {
 
         if (form.password.length < 8) {
             Alert.alert("Password Error", "Password must be at least 8 characters.");
+            return;
+        }
+
+        const passwordPattern =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}|:<>?~`,.\-\\]).{8,}$/;
+
+        if (!passwordPattern.test(form.password)) {
+            Alert.alert(
+                "Password Error",
+                "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+            );
             return;
         }
 

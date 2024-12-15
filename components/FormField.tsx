@@ -2,6 +2,8 @@ import { View, Text, TextInput, KeyboardTypeOptions, TouchableOpacity, Image } f
 import { useState } from "react";
 import { icons } from "../constants";
 
+const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}|:<>?~`,.\-\\]).{8,}$/;
+
 const FormField = ({
     title,
     value,
@@ -21,6 +23,21 @@ const FormField = ({
     editable?: boolean;
 }) => {
     const [showPassword, setShowPassword] = useState(false);
+    const [error, setError] = useState<string>("");
+
+    const handleTextChange = (e: string) => {
+        handleChangeText(e);
+
+        if (title === "Password") {
+            if (!passwordPattern.test(e)) {
+                setError(
+                    "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character."
+                );
+            } else {
+                setError("");
+            }
+        }
+    };
 
     return (
         <View className={`space-y-2 ${otherStyles}`}>
@@ -32,7 +49,7 @@ const FormField = ({
                     value={value}
                     placeholder={placeholder}
                     placeholderTextColor="#7B7B8B"
-                    onChangeText={handleChangeText}
+                    onChangeText={handleTextChange}
                     secureTextEntry={title === "Password" && !showPassword}
                     {...props}
                     editable={editable}
@@ -47,7 +64,12 @@ const FormField = ({
                         />
                     </TouchableOpacity>
                 )}
+
+                
             </View>
+            {title === "Password" && error && (
+                    <Text className="text-red-500 text-xs">{error}</Text>
+                )}
         </View>
     );
 };
