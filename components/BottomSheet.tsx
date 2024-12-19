@@ -62,16 +62,10 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
   const getLatestPrice = (prices: Price[]) => {
     if (!prices || prices.length === 0) return null;
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const todayPrice = prices.find((price) => {
-      const priceDate = new Date(price.date);
-      priceDate.setHours(0, 0, 0, 0);
-      return priceDate.getTime() === today.getTime();
-    });
-
-    return todayPrice || null;
+    // Sort prices by date descending and return the most recent one
+    return prices.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0];
   };
   const renderOrganizationCard = ({ item }: { item: Organization }) => {
     const latestPrice = getLatestPrice(item.price);
@@ -89,8 +83,9 @@ const OrganizationBottomSheet: React.FC<OrganizationBottomSheetProps> = ({
       <View className="bg-white p-4 mb-3 rounded-lg shadow-sm">
         <View className="flex-row justify-between items-center mb-2">
           <Text className="text-lg font-pbold text-primary">{item.name}</Text>
+          {/* Add null check and fallback for price display */}
           <Text className="text-base font-pmedium text-secondary">
-            ₱{latestPrice ? latestPrice.price.toFixed(2) : "0.00"}/kg
+            ₱{latestPrice?.price ? latestPrice.price.toFixed(2) : "0.00"}/kg
           </Text>
         </View>
 

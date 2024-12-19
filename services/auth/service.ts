@@ -17,8 +17,7 @@ class AuthService {
 
   constructor() {
     this.api = axios.create({
-      baseURL:
-        process.env.EXPO_PUBLIC_API_URL_DEV || "https://www.copracess.live",
+      baseURL: "https://www.copracess.live",
       timeout: 10000,
     });
 

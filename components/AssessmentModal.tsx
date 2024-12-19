@@ -81,7 +81,9 @@ const AssessmentModal: React.FC<AssessmentModalProps> = ({
 
           {/* Actual Weight Input */}
           <View className="mb-4">
-            <Text className="text-sm font-psemibold">Actual Weight (kg):</Text>
+            <Text className="text-sm font-psemibold">
+              Actual Weight (tons):
+            </Text>
             <TextInput
               value={actualWeight}
               onChangeText={setActualWeight}
