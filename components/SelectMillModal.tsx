@@ -123,52 +123,6 @@ const SelectOilMillModal: React.FC<SelectOilMillModalProps> = ({
     </View>
   );
 
-  const renderOrganizationCard = ({ item }: { item: Organization }) => (
-    <TouchableOpacity
-      onPress={() => handleSelect(item)}
-      className={`p-4 mb-3 rounded-lg border-2 ${
-        selectedOrganization?.id === item.id
-          ? "border-primary bg-primary/10"
-          : "border-gray-200 bg-white"
-      }`}
-    >
-      <View className="flex-row justify-between items-center">
-        <View className="flex-1">
-          <Text className="font-pbold text-lg text-primary">{item.name}</Text>
-          <Text className="text-gray-600 mt-1">{item.address}</Text>
-        </View>
-        {selectedOrganization?.id === item.id && (
-          <View className="bg-primary rounded-full p-2">
-            <FontAwesome name="check" size={16} color="white" />
-          </View>
-        )}
-      </View>
-      {item.price && item.price.length > 0 ? (
-        (() => {
-          // Sort prices by date to get the most recent one
-          const latestPrice = item.price.sort(
-            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-          )[0];
-          return (
-            <View>
-              <Text className="text-sm text-gray-700">
-                Latest Price: {latestPrice.price} PHP
-              </Text>
-              <Text className="text-sm text-gray-700">
-                Market Price: {latestPrice.market_price} PHP
-              </Text>
-              <Text className="text-xs text-gray-500">
-                Date: {new Date(latestPrice.date).toLocaleDateString()}
-              </Text>
-            </View>
-          );
-        })()
-      ) : (
-        <Text className="text-sm text-gray-500">No price available</Text>
-      )}
-    </TouchableOpacity>
-  );
-
   return (
     <Modal
       visible={visible}
@@ -234,7 +188,13 @@ const MillListItem = ({
   selectedOrganization: Organization | null;
   onSelect: (org: Organization) => void;
 }) => {
-  const latestPrice = item.price?.[0]?.price || 0;
+  const getLatestPrice = (prices: Price[]) => {
+    if (!prices || prices.length === 0) return null;
+    return prices.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0];
+  };
+  const latestPrice = getLatestPrice(item.price) || { price: 0.0 };
 
   return (
     <TouchableOpacity
@@ -248,7 +208,7 @@ const MillListItem = ({
           <Text className="font-pbold text-lg text-primary">{item.name}</Text>
           <Text className="text-gray-600 mt-1">{item.address}</Text>
           <Text className="text-primary font-pmedium mt-1">
-            Price: ₱{latestPrice.toFixed(2)}
+            Price: ₱{latestPrice.price.toFixed(2)}
           </Text>
         </View>
         {selectedOrganization?.id === item.id && (

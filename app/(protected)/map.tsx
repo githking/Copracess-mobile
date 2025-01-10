@@ -18,6 +18,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import OrganizationBottomSheet from "@/components/BottomSheet";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { calculateDistance } from "@/lib/distanceCalculator";
+import { router } from "expo-router";
 
 interface Geolocation {
   id: string;
@@ -76,6 +77,14 @@ const MapScreen = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredMills, setFilteredMills] = useState<Organization[]>([]);
 
+  const getLatestPrice = (prices: Price[]) => {
+    if (!prices || prices.length === 0) return null;
+
+    // Sort prices by date descending and return the most recent one
+    return prices.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    )[0];
+  };
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -109,7 +118,7 @@ const MapScreen = () => {
     const fetchOilMills = async () => {
       try {
         const response = await axios.get("/map");
-        console.log("API Response:", response.data.organizations[0]); // Debug first item
+        console.log("API Response:", response.data.organizations);
         if (response.data && Array.isArray(response.data.organizations)) {
           setOilMills(response.data.organizations);
         }
@@ -228,7 +237,7 @@ const MapScreen = () => {
   const renderMarker = useCallback(
     (mill: Organization) => {
       const isSelected = selectedMill?.id === mill.id;
-      const latestPrice = mill.price?.[0]?.price; // Get latest price
+      const latestPrice = getLatestPrice(mill.price)?.price; // Get sorted latest price
 
       return (
         <Marker
@@ -250,12 +259,19 @@ const MapScreen = () => {
     },
     [selectedMill, handleMarkerPress, CustomMarker]
   );
+  const handleBookPress = (millId: string) => {
+    router.push({
+      pathname: "/booking",
+      params: { organizationId: millId },
+    });
+  };
 
   if (isListView) {
     return (
       <ListView
         oilMills={filteredMills}
         onSwitchView={() => setIsListView(false)}
+        onBookPress={handleBookPress} // Add this prop
       />
     );
   }

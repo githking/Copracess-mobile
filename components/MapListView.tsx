@@ -35,9 +35,14 @@ interface Organization {
 interface ListViewProps {
   oilMills: Organization[];
   onSwitchView: () => void;
+  onBookPress?: (millId: string) => void; // Add this
 }
 
-const ListView: React.FC<ListViewProps> = ({ oilMills, onSwitchView }) => {
+const ListView: React.FC<ListViewProps> = ({
+  oilMills,
+  onSwitchView,
+  onBookPress,
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
@@ -89,7 +94,11 @@ const ListView: React.FC<ListViewProps> = ({ oilMills, onSwitchView }) => {
 
   const MillCard = ({ mill }: { mill: Organization }) => {
     const latestPrice = getLatestPrice(mill.price);
-
+    const handleBookPress = () => {
+      if (onBookPress) {
+        onBookPress(mill.id);
+      }
+    };
     return (
       <View className="bg-white rounded-xl p-4 mb-3 shadow-sm">
         <View className="flex-row justify-between items-start">
@@ -140,7 +149,10 @@ const ListView: React.FC<ListViewProps> = ({ oilMills, onSwitchView }) => {
               8:00 AM - 5:00 PM
             </Text>
           </View>
-          <TouchableOpacity className="bg-primary px-4 py-2 rounded-lg">
+          <TouchableOpacity
+            className="bg-primary px-4 py-2 rounded-lg"
+            onPress={handleBookPress}
+          >
             <Text className="text-white font-pbold">Book Now</Text>
           </TouchableOpacity>
         </View>
